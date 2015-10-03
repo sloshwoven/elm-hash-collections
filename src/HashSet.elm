@@ -32,73 +32,119 @@ import Dict as D
 import List as L
 
 {-|-}
-type HashSet a comparable = HashSet (a -> comparable) (D.Dict comparable a)
+type alias HashSet e comparable =
+    { hasher     : e -> comparable
+    , hashToElem : D.Dict comparable e
+    }
+
+-- build
 
 {-|-}
-empty : (a -> comparable) -> HashSet a comparable
-empty hasher = HashSet hasher <| D.empty
+empty : (e -> comparable) -> HashSet e comparable
+empty hasher =
+    { hasher     = hasher
+    , hashToElem = D.empty
+    }
 
 {-|-}
-singleton : a -> (a -> comparable) -> HashSet a comparable
-singleton elem hasher = HashSet hasher <| D.singleton (hasher elem) elem
+singleton : (e -> comparable) -> e -> HashSet e comparable
+singleton hasher elem =
+    { hasher     = hasher
+    , hashToElem = D.singleton (hasher elem) elem
+    }
 
 {-|-}
-insert : a -> HashSet a comparable -> HashSet a comparable
-insert elem (HashSet hasher dict) = HashSet hasher <| D.insert (hasher elem) elem dict
+insert : e -> HashSet e comparable -> HashSet e comparable
+insert elem hset =
+    { hset |
+        hashToElem <- D.insert (hset.hasher elem) elem hset.hashToElem
+    }
 
 {-|-}
-remove : a -> HashSet a comparable -> HashSet a comparable
-remove elem (HashSet hasher dict) = HashSet hasher <| D.remove (hasher elem) dict
+remove : e -> HashSet e comparable -> HashSet e comparable
+remove elem hset =
+    { hset |
+        hashToElem <- D.remove (hset.hasher elem) hset.hashToElem
+    }
+
+-- query
 
 {-|-}
-member : a -> HashSet a comparable -> Bool
-member elem (HashSet hasher dict) = D.member (hasher elem) dict
+member : e -> HashSet e comparable -> Bool
+member elem hset =
+    D.member (hset.hasher elem) hset.hashToElem
+
+-- combine
 
 {-|-}
-union : HashSet a comparable -> HashSet a comparable -> HashSet a comparable
-union (HashSet hasher1 dict1) (HashSet hasher2 dict2) = HashSet hasher1 <| D.union dict1 dict2
+union : HashSet e comparable -> HashSet e comparable -> HashSet e comparable
+union hset1 hset2 =
+    { hset1 |
+        hashToElem <- D.union hset1.hashToElem hset2.hashToElem
+    }
 
 {-|-}
-intersect : HashSet a comparable -> HashSet a comparable -> HashSet a comparable
-intersect (HashSet hasher1 dict1) (HashSet hasher2 dict2) = HashSet hasher1 <| D.intersect dict1 dict2
+intersect : HashSet e comparable -> HashSet e comparable -> HashSet e comparable
+intersect hset1 hset2 =
+    { hset1 |
+        hashToElem <- D.intersect hset1.hashToElem hset2.hashToElem
+    }
 
 {-|-}
-diff : HashSet a comparable -> HashSet a comparable -> HashSet a comparable
-diff (HashSet hasher1 dict1) (HashSet hasher2 dict2) = HashSet hasher1 <| D.diff dict1 dict2
+diff : HashSet e comparable -> HashSet e comparable -> HashSet e comparable
+diff hset1 hset2 =
+    { hset1 |
+        hashToElem <- D.diff hset1.hashToElem hset2.hashToElem
+    }
+
+-- lists
 
 {-|-}
-toList : HashSet a comparable -> List a
-toList (HashSet hasher dict) = D.values dict
+toList : HashSet e comparable -> List e
+toList hset =
+    D.values hset.hashToElem
 
 {-|-}
-fromList : List a -> (a -> comparable) -> HashSet a comparable
-fromList elems hasher =
+fromList : (e -> comparable) -> List e -> HashSet e comparable
+fromList hasher elems =
     let toPair elem = (hasher elem, elem)
-    in HashSet hasher <| D.fromList (L.map toPair elems)
+    in
+        { hasher     = hasher
+        , hashToElem = D.fromList <| L.map toPair elems
+        }
+
+-- transform
 
 {-|-}
-map : (a -> b) -> (b -> comparable) -> HashSet a comparable -> HashSet b comparable
-map f hasher (HashSet h dict) = fromList (L.map f <| D.values dict) hasher
+map : (e -> e') -> (e' -> comparable) -> HashSet e comparable -> HashSet e' comparable
+map f hasher hset =
+    fromList hasher (L.map f <| D.values hset.hashToElem)
 
 {-|
 uses hash order
 -}
-foldl : (a -> r -> r) -> r -> HashSet a comparable -> r
-foldl update acc (HashSet hasher dict) = L.foldl update acc <| D.values dict
+foldl : (e -> r -> r) -> r -> HashSet e comparable -> r
+foldl update acc hset =
+    L.foldl update acc <| D.values hset.hashToElem
 
 {-|
 uses hash order
 -}
-foldr : (a -> r -> r) -> r -> HashSet a comparable -> r
-foldr update acc (HashSet hasher dict) = L.foldr update acc <| D.values dict
+foldr : (e -> r -> r) -> r -> HashSet e comparable -> r
+foldr update acc hset =
+    L.foldr update acc <| D.values hset.hashToElem
 
 {-|-}
-filter : (a -> Bool) -> HashSet a comparable -> HashSet a comparable
-filter pred (HashSet hasher dict) = fromList (L.filter pred <| D.values dict) hasher
+filter : (e -> Bool) -> HashSet e comparable -> HashSet e comparable
+filter pred hset =
+    fromList hset.hasher (L.filter pred <| D.values hset.hashToElem)
 
 {-|-}
-partition : (a -> Bool) -> HashSet a comparable -> (HashSet a comparable, HashSet a comparable)
-partition pred (HashSet hasher dict) =
+partition : (e -> Bool) -> HashSet e comparable -> (HashSet e comparable, HashSet e comparable)
+partition pred hset =
     let pred' k v = pred v
-        parts = D.partition pred' dict
-    in (HashSet hasher (fst parts), HashSet hasher (snd parts))
+        parts = D.partition pred' hset.hashToElem
+    in
+        ( { hset | hashToElem <- fst parts }
+        , { hset | hashToElem <- snd parts }
+        )
