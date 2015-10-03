@@ -1,7 +1,7 @@
 module HashDict
     ( HashDict
     , empty, singleton, insert, update
-    , get, remove, member
+    , isEmpty, get, remove, member
     , filter
     , partition
     , foldl, foldr, map
@@ -18,7 +18,7 @@ module HashDict
 @docs empty, singleton, insert, update, remove
 
 # Query
-@docs member, get
+@docs isEmpty, member, get
 
 # Combine
 @docs union, intersect, diff
@@ -81,6 +81,11 @@ remove k hdict =
     }
 
 -- query
+
+{-|-}
+isEmpty : HashDict k comparable v -> Bool
+isEmpty hdict =
+    D.isEmpty hdict.hashToKV
 
 {-|-}
 member : k -> HashDict k comparable v -> Bool
