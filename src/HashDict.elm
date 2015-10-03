@@ -35,49 +35,87 @@ import List as L
 import Maybe as M
 
 {-|-}
-type HashDict k comparable v = HashDict (k -> comparable) (D.Dict comparable (k, v))
+type alias HashDict k comparable v =
+    { hasher   : k -> comparable
+    , hashToKV : D.Dict comparable (k, v)
+    }
+
+-- build
 
 {-|-}
 empty : (k -> comparable) -> HashDict k comparable v
-empty hasher = HashDict hasher <| D.empty
+empty hasher =
+    { hasher   = hasher
+    , hashToKV = D.empty
+    }
 
 {-|-}
-singleton : k -> v -> (k -> comparable) -> HashDict k comparable v
-singleton k v hasher = HashDict hasher <| D.singleton (hasher k) (k, v)
+singleton : (k -> comparable) -> k -> v -> HashDict k comparable v
+singleton hasher k v =
+    { hasher   = hasher 
+    , hashToKV = D.singleton (hasher k) (k, v)
+    }
 
 {-|-}
 insert : k -> v -> HashDict k comparable v -> HashDict k comparable v
-insert k v (HashDict hasher h2kv) = HashDict hasher <| D.insert (hasher k) (k, v) h2kv
+insert k v hdict =
+    { hdict |
+        hashToKV <- D.insert (hdict.hasher k) (k, v) hdict.hashToKV
+    }
 
 {-|-}
 update : k -> (Maybe v -> Maybe v) -> HashDict k comparable v -> HashDict k comparable v
-update k alter (HashDict hasher h2kv) =
-    let alter' mkv = M.map snd mkv |> alter |> M.map (\v -> (k, v))
-    in HashDict hasher <| D.update (hasher k) alter' h2kv
+update k alter hdict =
+    let alter' mkv =
+        M.map snd mkv |> alter |> M.map (\v -> (k, v))
+    in
+        { hdict |
+            hashToKV <- D.update (hdict.hasher k) alter' hdict.hashToKV
+        }
 
 {-|-}
 remove : k -> HashDict k comparable v -> HashDict k comparable v
-remove k (HashDict hasher h2kv) = HashDict hasher <| D.remove (hasher k) h2kv
+remove k hdict =
+    { hdict |
+        hashToKV <- D.remove (hdict.hasher k) hdict.hashToKV
+    }
+
+-- query
 
 {-|-}
 member : k -> HashDict k comparable v -> Bool
-member k (HashDict hasher h2kv) = D.member (hasher k) h2kv
+member k hdict =
+    D.member (hdict.hasher k) hdict.hashToKV
 
 {-|-}
 get : k -> HashDict k comparable v -> Maybe v
-get k (HashDict hasher h2kv) = D.get (hasher k) h2kv |> M.map snd
+get k hdict =
+    D.get (hdict.hasher k) hdict.hashToKV |> M.map snd
+
+-- combine
 
 {-|-}
 union : HashDict k comparable v -> HashDict k comparable v -> HashDict k comparable v
-union (HashDict hasher1 h2kv1) (HashDict hasher2 h2kv2) = HashDict hasher1 <| D.union h2kv1 h2kv2
+union hdict1 hdict2 =
+    { hdict1 |
+        hashToKV <- D.union hdict1.hashToKV hdict2.hashToKV
+    }
 
 {-|-}
 intersect : HashDict k comparable v -> HashDict k comparable v -> HashDict k comparable v
-intersect (HashDict hasher1 h2kv1) (HashDict hasher2 h2kv2) = HashDict hasher1 <| D.intersect h2kv1 h2kv2
+intersect hdict1 hdict2 =
+    { hdict1 |
+        hashToKV <- D.intersect hdict1.hashToKV hdict2.hashToKV
+    }
 
 {-|-}
 diff : HashDict k comparable v -> HashDict k comparable v -> HashDict k comparable v
-diff (HashDict hasher1 h2kv1) (HashDict hasher2 h2kv2) = HashDict hasher1 <| D.diff h2kv1 h2kv2
+diff hdict1 hdict2 =
+    { hdict1 |
+        hashToKV <- D.diff hdict1.hashToKV hdict2.hashToKV
+    }
+
+-- lists
 
 {-|-}
 keys : HashDict k comparable v -> List k
@@ -87,52 +125,73 @@ keys = mapKVs fst
 values : HashDict k comparable v -> List v
 values = mapKVs snd
 
+{-|-}
 mapKVs : ((k, v) -> r) -> HashDict k comparable v -> List r
-mapKVs f (HashDict hasher h2kv) = D.values h2kv |> L.map f
+mapKVs f hdict =
+    D.values hdict.hashToKV |> L.map f
 
 {-|-}
 toList : HashDict k comparable v -> List (k, v)
-toList (HashDict hasher h2kv) = D.values h2kv
+toList hdict =
+    D.values hdict.hashToKV
 
 {-|-}
-fromList : List (k, v) -> (k -> comparable) -> HashDict k comparable v
-fromList pairs hasher =
-    let toHashPair kv = (hasher <| fst kv, kv)
-    in HashDict hasher <| D.fromList <| L.map toHashPair pairs
+fromList : (k -> comparable) -> List (k, v) -> HashDict k comparable v
+fromList hasher pairs =
+    let toHashPair kv =
+        (hasher <| fst kv, kv)
+    in
+        { hasher   = hasher
+        , hashToKV = D.fromList <| L.map toHashPair pairs
+        }
+
+-- transform
 
 {-|-}
-map : (k -> v1 -> v2) -> HashDict k comparable v1 -> HashDict k comparable v2
-map f (HashDict hasher h2kv) =
+map : (k -> v -> v') -> HashDict k comparable v -> HashDict k comparable v'
+map f hdict =
     let applyF hash kv =
         let k = fst kv
         in (k, f k (snd kv))
-    in HashDict hasher <| D.map applyF h2kv
+    in
+        { hdict |
+            hashToKV <- D.map applyF hdict.hashToKV
+        }
 
 {-|
 uses hash order
 -}
 foldl : (k -> v -> r -> r) -> r -> HashDict k comparable v -> r
-foldl update acc (HashDict hasher h2kv) =
-    let update' hash kv acc' = update (fst kv) (snd kv) acc'
-    in D.foldl update' acc h2kv
+foldl update acc hdict =
+    let update' hash kv acc' =
+        update (fst kv) (snd kv) acc'
+    in D.foldl update' acc hdict.hashToKV
 
 {-|
 uses hash order
 -}
 foldr : (k -> v -> r -> r) -> r -> HashDict k comparable v -> r
-foldr update acc (HashDict hasher h2kv) =
-    let update' hash kv acc' = update (fst kv) (snd kv) acc'
-    in D.foldr update' acc h2kv
+foldr update acc hdict =
+    let update' hash kv acc' =
+        update (fst kv) (snd kv) acc'
+    in D.foldr update' acc hdict.hashToKV
 
 {-|-}
 filter : (k -> v -> Bool) -> HashDict k comparable v -> HashDict k comparable v
-filter pred (HashDict hasher h2kv) =
-    let pred' hash kv = pred (fst kv) (snd kv)
-    in HashDict hasher <| D.filter pred' h2kv
+filter pred hdict =
+    let pred' hash kv =
+        pred (fst kv) (snd kv)
+    in
+        { hdict |
+            hashToKV <- D.filter pred' hdict.hashToKV
+        }
 
 {-|-}
 partition : (k -> v -> Bool) -> HashDict k comparable v -> (HashDict k comparable v, HashDict k comparable v)
-partition pred (HashDict hasher h2kv) =
+partition pred hdict =
     let pred' hash kv = pred (fst kv) (snd kv)
-        parts = D.partition pred' h2kv
-    in (HashDict hasher (fst parts), HashDict hasher (snd parts))
+        parts = D.partition pred' hdict.hashToKV
+    in
+        ( { hdict | hashToKV <- fst parts }
+        , { hdict | hashToKV <- snd parts }
+        )
