@@ -1,0 +1,12 @@
+{
+    "version": "0.1.0",
+    "summary": "hash collections",
+    "repository": "https://github.com/sloshwoven/elm-hash-collections.git",
+    "license": "BSD3",
+    "source-directories": [],
+    "exposed-modules": [],
+    "dependencies": {
+        "elm-lang/core": "2.0.0 <= v < 3.0.0"
+    },
+    "elm-version": "0.15.0 <= v < 0.16.0"
+}
