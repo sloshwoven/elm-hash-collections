@@ -3,8 +3,12 @@
     "summary": "hash collections",
     "repository": "https://github.com/sloshwoven/elm-hash-collections.git",
     "license": "BSD3",
-    "source-directories": [],
-    "exposed-modules": [],
+    "source-directories": [
+        "src"
+    ],
+    "exposed-modules": [
+        "HashDict"
+    ],
     "dependencies": {
         "elm-lang/core": "2.0.0 <= v < 3.0.0"
     },
