@@ -7,7 +7,8 @@
         "src"
     ],
     "exposed-modules": [
-        "HashDict"
+        "HashDict",
+        "HashSet"
     ],
     "dependencies": {
         "elm-lang/core": "2.0.0 <= v < 3.0.0"
