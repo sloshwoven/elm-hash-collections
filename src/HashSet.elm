@@ -1,7 +1,7 @@
 module HashSet
     ( HashSet
     , empty, singleton, insert, remove
-    , member
+    , isEmpty, member
     , foldl, foldr, map
     , filter, partition
     , union, intersect, diff
@@ -16,7 +16,7 @@ module HashSet
 @docs empty, singleton, insert, remove
 
 # Query
-@docs member
+@docs isEmpty, member
 
 # Combine
 @docs union, intersect, diff
@@ -68,6 +68,11 @@ remove elem hset =
     }
 
 -- query
+
+{-|-}
+isEmpty : HashSet e comparable -> Bool
+isEmpty hset =
+    D.isEmpty hset.hashToElem
 
 {-|-}
 member : e -> HashSet e comparable -> Bool
