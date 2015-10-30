@@ -108,7 +108,7 @@ claimSingletonDoesNotContainOther =
     `C.false`
         (\((k1, k2), v) -> HD.singleton hashBool k1 v |> HD.member k2)
     `C.for`
-        I.tuple ((U.distinctPairInvestigator I.bool), I.int)
+        I.tuple (U.distinctPairInvestigator I.bool, I.int)
 
 claimInsertMakesNonEmpty : C.Claim
 claimInsertMakesNonEmpty =
