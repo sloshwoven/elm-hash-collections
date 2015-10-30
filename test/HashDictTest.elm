@@ -9,6 +9,7 @@ import Random.Extra as RE
 import Random.Int as RI
 import Random.List as RL
 import Shrink as S
+import TestUtil as U
 
 hashDictSuite : C.Claim
 hashDictSuite =
@@ -107,7 +108,7 @@ claimSingletonDoesNotContainOther =
     `C.false`
         (\((k1, k2), v) -> HD.singleton hashBool k1 v |> HD.member k2)
     `C.for`
-        I.tuple ((distinctPairInvestigator I.bool), I.int)
+        I.tuple ((U.distinctPairInvestigator I.bool), I.int)
 
 claimInsertMakesNonEmpty : C.Claim
 claimInsertMakesNonEmpty =
@@ -251,16 +252,3 @@ hashDictShrinker keyShrinker valueShrinker hdict =
         (HD.foldl shrinkKey [] hdict)
         ++
         (HD.foldl shrinkValue [] hdict)
-
-distinctPairInvestigator : I.Investigator a -> I.Investigator (a, a)
-distinctPairInvestigator inv =
-    let generator =
-            distinctPairOf inv.generator
-        shrinker =
-            S.tuple (inv.shrinker, inv.shrinker)
-    in I.investigator generator shrinker
-
-distinctPairOf : R.Generator a -> R.Generator (a, a)
-distinctPairOf gen =
-    let isDifferent (x, y) = x /= y
-    in RE.keepIf isDifferent <| R.pair gen gen
