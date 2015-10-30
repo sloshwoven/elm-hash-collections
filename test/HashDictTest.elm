@@ -211,7 +211,7 @@ transformSuite =
 
 -- ==== helpers ====
 
-hashBool : Bool -> comparable
+hashBool : HD.Hasher Bool comparable
 hashBool b =
     if b then 1 else 0
 
@@ -223,7 +223,7 @@ testHashDictInvestigator =
             hashDictShrinker S.bool S.int
     in I.investigator generator shrinker
 
-hashDictGenerator : (k -> comparable) -> R.Generator k -> R.Generator v -> R.Generator (HD.HashDict k comparable v)
+hashDictGenerator : HD.Hasher k comparable -> R.Generator k -> R.Generator v -> R.Generator (HD.HashDict k comparable v)
 hashDictGenerator hasher keyGenerator valueGenerator =
     R.pair keyGenerator valueGenerator
     |> RL.rangeLengthList 0 10
