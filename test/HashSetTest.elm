@@ -10,24 +10,24 @@ hashSetSuite =
     , listsSuite
     , transformSuite
     ]
-    |> C.suite "HashSet suite"
+    |> C.suite "HashSet"
 
 buildSuite : C.Claim
 buildSuite =
-    C.suite "build suite" []
+    C.suite "build" []
 
 querySuite : C.Claim
 querySuite =
-    C.suite "query suite" []
+    C.suite "query" []
 
 combineSuite : C.Claim
 combineSuite =
-    C.suite "combine suite" []
+    C.suite "combine" []
 
 listsSuite : C.Claim
 listsSuite =
-    C.suite "lists suite" []
+    C.suite "lists" []
 
 transformSuite : C.Claim
 transformSuite =
-    C.suite "transform suite" []
+    C.suite "transform" []

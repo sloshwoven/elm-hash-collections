@@ -9,6 +9,6 @@ main =
     [ hashDictSuite
     , hashSetSuite
     ]
-    |> C.suite "elm-hash-collections suite"
+    |> C.suite "elm-hash-collections"
     |> C.quickCheck
     |> B.display

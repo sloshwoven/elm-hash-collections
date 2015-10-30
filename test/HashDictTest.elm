@@ -18,13 +18,13 @@ hashDictSuite =
     , listsSuite
     , transformSuite
     ]
-    |> C.suite "HashDict suite"
+    |> C.suite "HashDict"
 
 -- ==== build ====
 
 buildSuite : C.Claim
 buildSuite =
-    C.suite "build suite"
+    C.suite "build"
     [ claimEmptyIsEmpty
     , claimMemberFromEmptyIsFalse
     , claimGetFromEmptyIsNothing
@@ -189,25 +189,25 @@ claimRemoveAllIsEmpty =
 
 querySuite : C.Claim
 querySuite =
-    C.suite "query suite" []
+    C.suite "query" []
 
 -- ==== combine ====
 
 combineSuite : C.Claim
 combineSuite =
-    C.suite "combine suite" []
+    C.suite "combine" []
 
 -- ==== lists ====
 
 listsSuite : C.Claim
 listsSuite =
-    C.suite "lists suite" []
+    C.suite "lists" []
 
 -- ==== transform ====
 
 transformSuite : C.Claim
 transformSuite =
-    C.suite "transform suite" []
+    C.suite "transform" []
 
 -- ==== helpers ====
 
