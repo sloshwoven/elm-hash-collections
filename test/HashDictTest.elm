@@ -15,7 +15,6 @@ import TestUtil as U
 hashDictSuite : C.Claim
 hashDictSuite =
     [ buildSuite
-    , querySuite
     , combineSuite
     , listsSuite
     , transformSuite
@@ -186,12 +185,6 @@ claimRemoveAllIsEmpty =
         (\hdict -> HD.foldl (\k v r -> HD.remove k r) hdict hdict |> HD.isEmpty)
     `C.for`
         testHashDictInvestigator
-
--- ==== query ====
-
-querySuite : C.Claim
-querySuite =
-    C.suite "query" []
 
 -- ==== combine ====
 
