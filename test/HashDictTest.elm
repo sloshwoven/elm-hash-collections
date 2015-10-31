@@ -3,6 +3,7 @@ module HashDictTest (hashDictSuite) where
 import Check as C
 import Check.Investigator as I
 import HashDict as HD
+import List as L
 import Random as R
 import Random.Bool as RB
 import Random.Extra as RE
@@ -196,7 +197,80 @@ querySuite =
 
 combineSuite : C.Claim
 combineSuite =
-    C.suite "combine" []
+    C.suite "combine"
+        [ claimComponentKeysInUnion
+        , claimUnionKeysInComponent
+        , claimUnionValues
+        , claimUnionEmptiness
+        , claimUnionHasherFromFirst
+        ]
+
+claimComponentKeysInUnion : C.Claim
+claimComponentKeysInUnion =
+    C.claim
+        "all keys of the input HashDicts are in their union"
+    `C.true`
+        (\(hdict1, hdict2) ->
+            let union = HD.union hdict1 hdict2
+                inUnion k = HD.member k union
+            in
+                L.append (HD.keys hdict1) (HD.keys hdict2)
+                |> L.all inUnion
+        )
+    `C.for`
+        I.tuple (testHashDictInvestigator, testHashDictInvestigator)
+
+claimUnionKeysInComponent : C.Claim
+claimUnionKeysInComponent =
+    C.claim
+        "all keys of a union are in at least one of the HashDicts"
+    `C.true`
+        (\(hdict1, hdict2) ->
+            let inComponent k = HD.member k hdict1 || HD.member k hdict2
+            in HD.union hdict1 hdict2 |> HD.keys |> L.all inComponent
+        )
+    `C.for`
+        I.tuple (testHashDictInvestigator, testHashDictInvestigator)
+
+claimUnionValues : C.Claim
+claimUnionValues =
+    C.claim
+        "union values come from the components (first if in both)"
+    `C.true`
+        (\(hdict1, hdict2) ->
+            let union =
+                    HD.union hdict1 hdict2
+                rightValue k =
+                    HD.get k union ==
+                        if HD.member k hdict1
+                        then HD.get k hdict1
+                        else HD.get k hdict2
+            in HD.keys union |> L.all rightValue
+        )
+    `C.for`
+        I.tuple (testHashDictInvestigator, testHashDictInvestigator)
+
+claimUnionEmptiness : C.Claim
+claimUnionEmptiness =
+    C.claim
+        "unions are empty if and only if both components are empty"
+    `C.that`
+        (\(hdict1, hdict2) -> HD.union hdict1 hdict2 |> HD.isEmpty)
+    `C.is`
+        (\(hdict1, hdict2) -> HD.isEmpty hdict1 && HD.isEmpty hdict2)
+    `C.for`
+        I.tuple (testHashDictInvestigator, testHashDictInvestigator)
+
+claimUnionHasherFromFirst : C.Claim
+claimUnionHasherFromFirst =
+    C.claim
+        "the hasher of a union comes from the first HashDict"
+    `C.that`
+        (\(hdict1, hdict2, k) -> HD.union hdict1 hdict2 |> (\u -> u.hasher k))
+    `C.is`
+        (\(hdict1, hdict2, k) -> hdict1.hasher k)
+    `C.for`
+        I.tuple3 (testHashDictInvestigator, altTestHashDictInvestigator, I.bool)
 
 -- ==== lists ====
 
@@ -216,10 +290,22 @@ hashBool : HD.Hasher Bool comparable
 hashBool b =
     if b then 1 else 0
 
+altHashBool : HD.Hasher Bool comparable
+altHashBool b =
+    if b then 5 else 7
+
 testHashDictInvestigator : I.Investigator (HD.HashDict Bool Int Int)
 testHashDictInvestigator =
+    makeTestHashDictInvestigator hashBool
+
+altTestHashDictInvestigator : I.Investigator (HD.HashDict Bool Int Int)
+altTestHashDictInvestigator =
+    makeTestHashDictInvestigator altHashBool
+
+makeTestHashDictInvestigator : HD.Hasher Bool comparable -> I.Investigator (HD.HashDict Bool Int Int)
+makeTestHashDictInvestigator hasher =
     let generator =
-            hashDictGenerator hashBool RB.bool RI.anyInt
+            hashDictGenerator hasher RB.bool RI.anyInt
         shrinker =
             hashDictShrinker S.bool S.int
     in I.investigator generator shrinker
