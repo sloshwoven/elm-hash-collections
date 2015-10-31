@@ -196,6 +196,11 @@ combineSuite =
         , claimUnionValues
         , claimUnionEmptiness
         , claimUnionHasherFromFirst
+        , claimComponentKeysInIntersect
+        , claimIntersectKeysInBothComponents
+        , claimIntersectValues
+        , claimIntersectEmptiness
+        , claimIntersectHasherFromFirst
         ]
 
 claimComponentKeysInUnion : C.Claim
@@ -256,14 +261,68 @@ claimUnionEmptiness =
 
 claimUnionHasherFromFirst : C.Claim
 claimUnionHasherFromFirst =
+    claimHasherFromFirst "union" HD.union
+
+claimComponentKeysInIntersect : C.Claim
+claimComponentKeysInIntersect =
     C.claim
-        "the hasher of a union comes from the first HashDict"
-    `C.that`
-        (\(hdict1, hdict2, k) -> HD.union hdict1 hdict2 |> (\u -> u.hasher k))
-    `C.is`
-        (\(hdict1, hdict2, k) -> hdict1.hasher k)
+        "all keys that appear in both input HashDicts are in their intersect"
+    `C.true`
+        (\(hdict1, hdict2) ->
+            let intersect = HD.intersect hdict1 hdict2
+                inIntersect k = HD.member k intersect
+                inHDict2 k = HD.member k hdict2
+            in
+                L.filter inHDict2 (HD.keys hdict1)
+                |> L.all inIntersect
+        )
     `C.for`
-        I.tuple3 (testHashDictInvestigator, altTestHashDictInvestigator, I.bool)
+        I.tuple (testHashDictInvestigator, testHashDictInvestigator)
+
+claimIntersectKeysInBothComponents : C.Claim
+claimIntersectKeysInBothComponents =
+    C.claim
+        "all keys of an intersect are in both input HashDicts"
+    `C.true`
+        (\(hdict1, hdict2) ->
+            let inBothComponents k = HD.member k hdict1 && HD.member k hdict2
+            in HD.intersect hdict1 hdict2 |> HD.keys |> L.all inBothComponents
+        )
+    `C.for`
+        I.tuple (testHashDictInvestigator, testHashDictInvestigator)
+
+claimIntersectValues : C.Claim
+claimIntersectValues =
+    C.claim
+        "intersect values come from the first component"
+    `C.true`
+        (\(hdict1, hdict2) ->
+            let intersect =
+                    HD.intersect hdict1 hdict2
+                correctValue k =
+                    HD.get k intersect == HD.get k hdict1
+            in HD.keys intersect |> L.all correctValue
+        )
+    `C.for`
+        I.tuple (testHashDictInvestigator, testHashDictInvestigator)
+
+claimIntersectEmptiness : C.Claim
+claimIntersectEmptiness =
+    C.claim
+        "intersections are empty if and only if the components have no keys in common"
+    `C.that`
+        (\(hdict1, hdict2) -> HD.intersect hdict1 hdict2 |> HD.isEmpty)
+    `C.is`
+        (\(hdict1, hdict2) ->
+            let notInHDict2 k = not (HD.member k hdict2)
+            in HD.keys hdict1 |> L.all notInHDict2
+        )
+    `C.for`
+        I.tuple (testHashDictInvestigator, testHashDictInvestigator)
+
+claimIntersectHasherFromFirst : C.Claim
+claimIntersectHasherFromFirst =
+    claimHasherFromFirst "intersection" HD.intersect
 
 -- ==== lists ====
 
@@ -331,3 +390,14 @@ hashDictShrinker keyShrinker valueShrinker hdict =
         (HD.foldl shrinkKey [] hdict)
         ++
         (HD.foldl shrinkValue [] hdict)
+
+claimHasherFromFirst : String -> (HD.HashDict Bool comparable Int -> HD.HashDict Bool comparable Int -> HD.HashDict Bool comparable Int) -> C.Claim
+claimHasherFromFirst name combiner =
+    C.claim
+        (name ++ " hasher comes from the first HashDict")
+    `C.that`
+        (\(hdict1, hdict2, k) -> combiner hdict1 hdict2 |> (\u -> u.hasher k))
+    `C.is`
+        (\(hdict1, hdict2, k) -> hdict1.hasher k)
+    `C.for`
+        I.tuple3 (testHashDictInvestigator, altTestHashDictInvestigator, I.bool)
