@@ -201,6 +201,11 @@ combineSuite =
         , claimIntersectValues
         , claimIntersectEmptiness
         , claimIntersectHasherFromFirst
+        , claimComponentKeysInDiff
+        , claimDiffKeysInFirst
+        , claimDiffValues
+        , claimDiffEmptiness
+        , claimDiffHasherFromFirst
         ]
 
 claimComponentKeysInUnion : C.Claim
@@ -323,6 +328,65 @@ claimIntersectEmptiness =
 claimIntersectHasherFromFirst : C.Claim
 claimIntersectHasherFromFirst =
     claimHasherFromFirst "intersection" HD.intersect
+
+claimComponentKeysInDiff : C.Claim
+claimComponentKeysInDiff =
+    C.claim
+        "all keys of the first HashDict that are not in the second are in the diff"
+    `C.that`
+        (\(hdict1, hdict2) -> HD.diff hdict1 hdict2 |> HD.keys)
+    `C.is`
+        (\(hdict1, hdict2) ->
+            let notInHDict2 k = not (HD.member k hdict2)
+            in hdict1 |> HD.keys |> L.filter notInHDict2
+        )
+    `C.for`
+        I.tuple (testHashDictInvestigator, testHashDictInvestigator)
+
+claimDiffKeysInFirst : C.Claim
+claimDiffKeysInFirst =
+    C.claim
+        "all diff keys are in the first HashDict"
+    `C.true`
+        (\(hdict1, hdict2) ->
+            let inHDict1 k = HD.member k hdict1
+            in HD.diff hdict1 hdict2 |> HD.keys |> L.all inHDict1
+        )
+    `C.for`
+        I.tuple (testHashDictInvestigator, testHashDictInvestigator)
+
+claimDiffValues : C.Claim
+claimDiffValues =
+    C.claim
+        "all diff values come from the first HashDict"
+    `C.true`
+        (\(hdict1, hdict2) ->
+            let diff =
+                    HD.diff hdict1 hdict2
+                correctValue k =
+                    HD.get k diff == HD.get k hdict1
+            in HD.keys diff |> L.all correctValue
+        )
+    `C.for`
+        I.tuple (testHashDictInvestigator, testHashDictInvestigator)
+
+claimDiffEmptiness : C.Claim
+claimDiffEmptiness =
+    C.claim
+        "diffs are empty if and only if all keys of the first are in the second"
+    `C.that`
+        (\(hdict1, hdict2) -> HD.diff hdict1 hdict2 |> HD.isEmpty)
+    `C.is`
+        (\(hdict1, hdict2) ->
+            let inHDict2 k = HD.member k hdict2
+            in HD.keys hdict1 |> L.all inHDict2
+        )
+    `C.for`
+        I.tuple (testHashDictInvestigator, testHashDictInvestigator)
+
+claimDiffHasherFromFirst : C.Claim
+claimDiffHasherFromFirst =
+    claimHasherFromFirst "diff" HD.diff
 
 -- ==== lists ====
 
