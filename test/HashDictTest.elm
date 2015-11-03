@@ -243,12 +243,12 @@ claimUnionValues =
         (\(hdict1, hdict2) ->
             let union =
                     HD.union hdict1 hdict2
-                rightValue k =
+                correctValue k =
                     HD.get k union ==
                         if HD.member k hdict1
                         then HD.get k hdict1
                         else HD.get k hdict2
-            in HD.keys union |> L.all rightValue
+            in HD.keys union |> L.all correctValue
         )
     `C.for`
         I.tuple (testHashDictInvestigator, testHashDictInvestigator)
