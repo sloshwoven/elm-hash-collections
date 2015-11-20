@@ -392,7 +392,60 @@ claimDiffHasherFromFirst =
 
 listsSuite : C.Claim
 listsSuite =
-    C.suite "lists" []
+    C.suite "lists"
+        [ claimEmptyHasNoKeys
+        , claimSingletonHasOneKey
+        , claimKeyInKeyListAfterInsert
+        , claimKeyNotInKeyListAfterUpdateToNothing
+        , claimKeyInKeyListAfterUpdateToJust
+        ]
+
+claimEmptyHasNoKeys : C.Claim
+claimEmptyHasNoKeys =
+    C.claim
+        "an empty HashDict has no keys"
+    `C.true`
+        (\() -> HD.empty hashBool |> HD.keys |> L.isEmpty)
+    `C.for`
+        I.void
+
+claimSingletonHasOneKey : C.Claim
+claimSingletonHasOneKey =
+    C.claim
+        "a singleton HashDict has the one key it was created with"
+    `C.that`
+        (\(k, v) -> HD.singleton hashBool k v |> HD.keys)
+    `C.is`
+        (\(k, v) -> [k])
+    `C.for`
+        I.tuple (I.bool, I.int)
+
+claimKeyInKeyListAfterInsert : C.Claim
+claimKeyInKeyListAfterInsert =
+    C.claim
+        "after inserting, the key is in the key list"
+    `C.true`
+        (\(hdict, k, v) -> HD.insert k v hdict |> HD.keys |> L.any ((==) k))
+    `C.for`
+        I.tuple3 (testHashDictInvestigator, I.bool, I.int)
+
+claimKeyNotInKeyListAfterUpdateToNothing : C.Claim
+claimKeyNotInKeyListAfterUpdateToNothing =
+    C.claim
+        "after updating to Nothing, the key is no longer in the key list"
+    `C.false`
+        (\(hdict, k) -> HD.update k (always Nothing) hdict |> HD.keys |> L.any ((==) k))
+    `C.for`
+        I.tuple (testHashDictInvestigator, I.bool)
+
+claimKeyInKeyListAfterUpdateToJust : C.Claim
+claimKeyInKeyListAfterUpdateToJust =
+    C.claim
+        "after updating to a Just, the key is in the key list"
+    `C.true`
+        (\(hdict, k, v) -> HD.update k (always (Just v)) hdict |> HD.keys |> L.any ((==) k))
+    `C.for`
+        I.tuple3 (testHashDictInvestigator, I.bool, I.int)
 
 -- ==== transform ====
 
