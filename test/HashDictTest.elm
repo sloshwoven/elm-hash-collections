@@ -398,6 +398,10 @@ listsSuite =
         , claimKeyInKeyListAfterInsert
         , claimKeyNotInKeyListAfterUpdateToNothing
         , claimKeyInKeyListAfterUpdateToJust
+        , claimEmptyHasNoValues
+        , claimSingletonHasOneValue
+        , claimValueInValueListAfterInsert
+        , claimValueInValueListAfterUpdateToJust
         ]
 
 claimEmptyHasNoKeys : C.Claim
@@ -444,6 +448,44 @@ claimKeyInKeyListAfterUpdateToJust =
         "after updating to a Just, the key is in the key list"
     `C.true`
         (\(hdict, k, v) -> HD.update k (always (Just v)) hdict |> HD.keys |> L.any ((==) k))
+    `C.for`
+        I.tuple3 (testHashDictInvestigator, I.bool, I.int)
+
+claimEmptyHasNoValues : C.Claim
+claimEmptyHasNoValues =
+    C.claim
+        "an empty HashDict has no values"
+    `C.true`
+        (\() -> HD.empty hashBool |> HD.values |> L.isEmpty)
+    `C.for`
+        I.void
+
+claimSingletonHasOneValue : C.Claim
+claimSingletonHasOneValue =
+    C.claim
+        "a singleton HashDict has the one value it was created with"
+    `C.that`
+        (\(k, v) -> HD.singleton hashBool k v |> HD.values)
+    `C.is`
+        (\(k, v) -> [v])
+    `C.for`
+        I.tuple (I.bool, I.int)
+
+claimValueInValueListAfterInsert : C.Claim
+claimValueInValueListAfterInsert =
+    C.claim
+        "after inserting, the value is in the value list"
+    `C.true`
+        (\(hdict, k, v) -> HD.insert k v hdict |> HD.values |> L.any ((==) v))
+    `C.for`
+        I.tuple3 (testHashDictInvestigator, I.bool, I.int)
+
+claimValueInValueListAfterUpdateToJust : C.Claim
+claimValueInValueListAfterUpdateToJust =
+    C.claim
+        "after updating to a Just, the value is in the value list"
+    `C.true`
+        (\(hdict, k, v) -> HD.update k (always (Just v)) hdict |> HD.values |> L.any ((==) v))
     `C.for`
         I.tuple3 (testHashDictInvestigator, I.bool, I.int)
 
