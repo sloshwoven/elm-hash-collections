@@ -404,6 +404,7 @@ listsSuite =
         , claimValueInValueListAfterInsert
         , claimValueInValueListAfterUpdateToJust
         , claimToListIsKeysZippedWithValues
+        , claimFromListToListIsSortedAssocList
         ]
 
 claimEmptyHasNoKeys : C.Claim
@@ -502,6 +503,17 @@ claimToListIsKeysZippedWithValues =
     `C.for`
         testHashDictInvestigator
 
+claimFromListToListIsSortedAssocList : C.Claim
+claimFromListToListIsSortedAssocList =
+    C.claim
+        "fromList composed with toList produces a sorted association list"
+    `C.that`
+        (\(list) -> HD.fromList hashBool list |> HD.toList)
+    `C.is`
+        (\(list) -> L.foldr assocAppend [] list |> L.sortBy (hashBool << fst))
+    `C.for`
+        I.list (I.tuple (I.bool, I.int))
+
 -- ==== transform ====
 
 transformSuite : C.Claim
@@ -517,6 +529,18 @@ hashBool b =
 altHashBool : H.Hasher Bool comparable
 altHashBool b =
     if b then 5 else 7
+
+assocAppend : (Bool, Int) -> List (Bool, Int) -> List (Bool, Int)
+assocAppend (k, v) list =
+    if assocMember k list
+    then list
+    else (k, v) :: list
+
+assocMember : k -> List (k, v) -> Bool
+assocMember k list =
+    let keyMatch (k', v') =
+        k' == k
+    in L.any keyMatch list
 
 testHashDictInvestigator : I.Investigator (HD.HashDict Bool Int Int)
 testHashDictInvestigator =
