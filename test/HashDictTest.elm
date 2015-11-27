@@ -2,6 +2,7 @@ module HashDictTest (hashDictSuite) where
 
 import Check as C
 import Check.Investigator as I
+import Hasher as H
 import HashDict as HD
 import List as L
 import Random as R
@@ -497,11 +498,11 @@ transformSuite =
 
 -- ==== helpers ====
 
-hashBool : HD.Hasher Bool comparable
+hashBool : H.Hasher Bool comparable
 hashBool b =
     if b then 1 else 0
 
-altHashBool : HD.Hasher Bool comparable
+altHashBool : H.Hasher Bool comparable
 altHashBool b =
     if b then 5 else 7
 
@@ -513,7 +514,7 @@ altTestHashDictInvestigator : I.Investigator (HD.HashDict Bool Int Int)
 altTestHashDictInvestigator =
     makeTestHashDictInvestigator altHashBool
 
-makeTestHashDictInvestigator : HD.Hasher Bool comparable -> I.Investigator (HD.HashDict Bool Int Int)
+makeTestHashDictInvestigator : H.Hasher Bool comparable -> I.Investigator (HD.HashDict Bool Int Int)
 makeTestHashDictInvestigator hasher =
     let generator =
             hashDictGenerator hasher RB.bool RI.anyInt
@@ -521,7 +522,7 @@ makeTestHashDictInvestigator hasher =
             hashDictShrinker S.bool S.int
     in I.investigator generator shrinker
 
-hashDictGenerator : HD.Hasher k comparable -> R.Generator k -> R.Generator v -> R.Generator (HD.HashDict k comparable v)
+hashDictGenerator : H.Hasher k comparable -> R.Generator k -> R.Generator v -> R.Generator (HD.HashDict k comparable v)
 hashDictGenerator hasher keyGenerator valueGenerator =
     R.pair keyGenerator valueGenerator
     |> RL.rangeLengthList 0 10

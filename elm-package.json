@@ -8,6 +8,7 @@
         "test"
     ],
     "exposed-modules": [
+        "Hasher",
         "HashDict",
         "HashSet"
     ],

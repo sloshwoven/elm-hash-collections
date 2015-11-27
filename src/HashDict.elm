@@ -1,6 +1,5 @@
 module HashDict
     ( HashDict
-    , Hasher
     , empty, singleton, insert, update
     , isEmpty, get, remove, member
     , filter
@@ -13,7 +12,7 @@ module HashDict
 
 {-|
 # Definition
-@docs HashDict, Hasher
+@docs HashDict
 
 # Build
 @docs empty, singleton, insert, update, remove
@@ -32,29 +31,27 @@ module HashDict
 -}
 
 import Dict as D
+import Hasher as H
 import List as L
 import Maybe as M
 
 {-|-}
 type alias HashDict k comparable v =
-    { hasher   : Hasher k comparable
+    { hasher   : H.Hasher k comparable
     , hashToKV : D.Dict comparable (k, v)
     }
-
-{-|-}
-type alias Hasher k comparable = k -> comparable
 
 -- build
 
 {-|-}
-empty : Hasher k comparable -> HashDict k comparable v
+empty : H.Hasher k comparable -> HashDict k comparable v
 empty hasher =
     { hasher   = hasher
     , hashToKV = D.empty
     }
 
 {-|-}
-singleton : Hasher k comparable -> k -> v -> HashDict k comparable v
+singleton : H.Hasher k comparable -> k -> v -> HashDict k comparable v
 singleton hasher k v =
     { hasher   = hasher 
     , hashToKV = D.singleton (hasher k) (k, v)
@@ -144,7 +141,7 @@ toList hdict =
     D.values hdict.hashToKV
 
 {-|-}
-fromList : Hasher k comparable -> List (k, v) -> HashDict k comparable v
+fromList : H.Hasher k comparable -> List (k, v) -> HashDict k comparable v
 fromList hasher pairs =
     let toHashPair kv =
         (hasher <| fst kv, kv)
