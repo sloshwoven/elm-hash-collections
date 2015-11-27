@@ -528,10 +528,7 @@ claimMapNegateNegatesValue =
     C.claim
         "mapping to negate negates values"
     `C.that`
-        (\(hdict, k, v) ->
-            let negateValue k v = negate v
-            in HD.insert k v hdict |> HD.map negateValue |> HD.get k
-        )
+        (\(hdict, k, v) -> HD.insert k v hdict |> HD.map negateValue |> HD.get k)
     `C.is`
         (\(hdict, k, v) -> Just (negate v))
     `C.for`
@@ -542,10 +539,7 @@ claimMapLeavesKeysUnchanged =
     C.claim
         "mapping does not change the keys"
     `C.that`
-        (\(hdict) ->
-            let negateValue k v = negate v
-            in HD.map negateValue hdict |> HD.keys
-        )
+        (\(hdict) -> HD.map negateValue hdict |> HD.keys)
     `C.is`
         (HD.keys)
     `C.for`
@@ -572,6 +566,10 @@ assocMember k list =
     let keyMatch (k', v') =
         k' == k
     in L.any keyMatch list
+
+negateValue : k -> number -> number
+negateValue k v =
+    negate v
 
 testHashDictInvestigator : I.Investigator (HD.HashDict Bool Int Int)
 testHashDictInvestigator =
