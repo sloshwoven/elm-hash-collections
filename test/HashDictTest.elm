@@ -520,6 +520,7 @@ transformSuite : C.Claim
 transformSuite =
     C.suite "transform"
         [ claimMapNegateNegatesValue
+        , claimMapLeavesKeysUnchanged
         ]
 
 claimMapNegateNegatesValue : C.Claim
@@ -535,6 +536,20 @@ claimMapNegateNegatesValue =
         (\(hdict, k, v) -> Just (negate v))
     `C.for`
         I.tuple3 (testHashDictInvestigator, I.bool, I.int)
+
+claimMapLeavesKeysUnchanged : C.Claim
+claimMapLeavesKeysUnchanged =
+    C.claim
+        "mapping does not change the keys"
+    `C.that`
+        (\(hdict) ->
+            let negateValue k v = negate v
+            in HD.map negateValue hdict |> HD.keys
+        )
+    `C.is`
+        (HD.keys)
+    `C.for`
+        testHashDictInvestigator
 
 -- ==== helpers ====
 
