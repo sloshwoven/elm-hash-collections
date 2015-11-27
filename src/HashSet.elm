@@ -29,25 +29,26 @@ module HashSet
 -}
 
 import Dict as D
+import Hasher as H
 import List as L
 
 {-|-}
 type alias HashSet e comparable =
-    { hasher     : e -> comparable
+    { hasher     : H.Hasher e comparable
     , hashToElem : D.Dict comparable e
     }
 
 -- build
 
 {-|-}
-empty : (e -> comparable) -> HashSet e comparable
+empty : H.Hasher e comparable -> HashSet e comparable
 empty hasher =
     { hasher     = hasher
     , hashToElem = D.empty
     }
 
 {-|-}
-singleton : (e -> comparable) -> e -> HashSet e comparable
+singleton : H.Hasher e comparable -> e -> HashSet e comparable
 singleton hasher elem =
     { hasher     = hasher
     , hashToElem = D.singleton (hasher elem) elem
@@ -110,7 +111,7 @@ toList hset =
     D.values hset.hashToElem
 
 {-|-}
-fromList : (e -> comparable) -> List e -> HashSet e comparable
+fromList : H.Hasher e comparable -> List e -> HashSet e comparable
 fromList hasher elems =
     let toPair elem = (hasher elem, elem)
     in
@@ -121,7 +122,7 @@ fromList hasher elems =
 -- transform
 
 {-|-}
-map : (e -> e') -> (e' -> comparable) -> HashSet e comparable -> HashSet e' comparable
+map : (e -> e') -> H.Hasher e' comparable -> HashSet e comparable -> HashSet e' comparable
 map f hasher hset =
     fromList hasher (L.map f <| D.values hset.hashToElem)
 
