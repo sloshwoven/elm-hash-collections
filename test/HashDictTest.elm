@@ -521,6 +521,8 @@ transformSuite =
     C.suite "transform"
         [ claimMapNegateNegatesValue
         , claimMapLeavesKeysUnchanged
+        , claimFoldlToListMapReverse
+        , claimFoldrToListMap
         ]
 
 claimMapNegateNegatesValue : C.Claim
@@ -542,6 +544,28 @@ claimMapLeavesKeysUnchanged =
         (\(hdict) -> HD.map negateValue hdict |> HD.keys)
     `C.is`
         (HD.keys)
+    `C.for`
+        testHashDictInvestigator
+
+claimFoldlToListMapReverse : C.Claim
+claimFoldlToListMapReverse =
+    C.claim
+        "building a list with foldl is toList mapped and reversed"
+    `C.that`
+        (\(hdict) -> HD.foldl prependKeyValueString [] hdict)
+    `C.is`
+        (\(hdict) -> HD.toList hdict |> L.map (uncurry appendStrings) |> L.reverse)
+    `C.for`
+        testHashDictInvestigator
+
+claimFoldrToListMap : C.Claim
+claimFoldrToListMap =
+    C.claim
+        "building a list with foldr is toList mapped"
+    `C.that`
+        (\(hdict) -> HD.foldr prependKeyValueString [] hdict)
+    `C.is`
+        (\(hdict) -> HD.toList hdict |> L.map (uncurry appendStrings))
     `C.for`
         testHashDictInvestigator
 
@@ -570,6 +594,14 @@ assocMember k list =
 negateValue : k -> number -> number
 negateValue k v =
     negate v
+
+prependKeyValueString : k -> v -> List String -> List String
+prependKeyValueString k v list =
+    appendStrings k v :: list
+
+appendStrings : k -> v -> String
+appendStrings k v =
+    (toString k) ++ ":" ++ (toString v)
 
 testHashDictInvestigator : I.Investigator (HD.HashDict Bool Int Int)
 testHashDictInvestigator =
