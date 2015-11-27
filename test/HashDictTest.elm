@@ -518,7 +518,23 @@ claimFromListToListIsSortedAssocList =
 
 transformSuite : C.Claim
 transformSuite =
-    C.suite "transform" []
+    C.suite "transform"
+        [ claimMapNegateNegatesValue
+        ]
+
+claimMapNegateNegatesValue : C.Claim
+claimMapNegateNegatesValue =
+    C.claim
+        "mapping to negate negates values"
+    `C.that`
+        (\(hdict, k, v) ->
+            let negateValue k v = negate v
+            in HD.insert k v hdict |> HD.map negateValue |> HD.get k
+        )
+    `C.is`
+        (\(hdict, k, v) -> Just (negate v))
+    `C.for`
+        I.tuple3 (testHashDictInvestigator, I.bool, I.int)
 
 -- ==== helpers ====
 
