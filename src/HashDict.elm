@@ -134,7 +134,6 @@ keys = mapKVs fst
 values : HashDict k comparable v -> List v
 values = mapKVs snd
 
-{-|-}
 mapKVs : ((k, v) -> r) -> HashDict k comparable v -> List r
 mapKVs f hdict =
     D.values hdict.hashToKV |> L.map f
