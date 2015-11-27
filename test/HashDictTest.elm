@@ -403,6 +403,7 @@ listsSuite =
         , claimSingletonHasOneValue
         , claimValueInValueListAfterInsert
         , claimValueInValueListAfterUpdateToJust
+        , claimToListIsKeysZippedWithValues
         ]
 
 claimEmptyHasNoKeys : C.Claim
@@ -489,6 +490,17 @@ claimValueInValueListAfterUpdateToJust =
         (\(hdict, k, v) -> HD.update k (always (Just v)) hdict |> HD.values |> L.any ((==) v))
     `C.for`
         I.tuple3 (testHashDictInvestigator, I.bool, I.int)
+
+claimToListIsKeysZippedWithValues : C.Claim
+claimToListIsKeysZippedWithValues =
+    C.claim
+        "toList is keys zipped with values"
+    `C.that`
+        (\(hdict) -> HD.toList hdict)
+    `C.is`
+        (\(hdict) -> L.map2 (,) (HD.keys hdict) (HD.values hdict))
+    `C.for`
+        testHashDictInvestigator
 
 -- ==== transform ====
 
