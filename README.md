@@ -19,6 +19,7 @@ alice = { id = 1, name = "Alice" }
 bob = { id = 2, name = "Bob" }
 
 people = HS.singleton .id alice
+
 HS.member alice people -- returns True
 HS.member bob people -- returns False
 ```
