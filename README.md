@@ -12,23 +12,27 @@ a hashing function as an additional argument.
 
 ### HashSet
 
-    import HashSet as HS
-    
-    alice = { id = 1, name = "Alice" }
-    bob = { id = 2, name = "Bob" }
-    
-    people = HS.singleton .id alice
-    HS.member alice people -- returns True
-    HS.member bob people -- returns False
+```elm
+import HashSet as HS
+
+alice = { id = 1, name = "Alice" }
+bob = { id = 2, name = "Bob" }
+
+people = HS.singleton .id alice
+HS.member alice people -- returns True
+HS.member bob people -- returns False
+```
 
 ### HashDict
 
-    import HashDict as HD
-    
-    alice = { id = 1, name = "Alice" }
-    bob = { id = 2, name = "Bob" }
-    
-    scores = HD.fromList .id [(alice, 10), (bob, 5)]
-    
-    HD.get alice scores -- returns Just 10
-    HD.get bob scores -- returns Just 5
+```elm
+import HashDict as HD
+
+alice = { id = 1, name = "Alice" }
+bob = { id = 2, name = "Bob" }
+
+scores = HD.fromList .id [(alice, 10), (bob, 5)]
+
+HD.get alice scores -- returns Just 10
+HD.get bob scores -- returns Just 5
+```
