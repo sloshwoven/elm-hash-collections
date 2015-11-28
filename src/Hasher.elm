@@ -7,4 +7,5 @@ module Hasher (Hasher) where
 
 {-| A function that hashes a value to a comparable.
 -}
-type alias Hasher v comparable = v -> comparable
+type alias Hasher v comparable =
+    v -> comparable
