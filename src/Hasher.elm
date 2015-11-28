@@ -5,5 +5,6 @@ module Hasher (Hasher) where
 @docs Hasher
 -}
 
-{-|-}
+{-| A function that hashes a value to a comparable.
+-}
 type alias Hasher k comparable = k -> comparable
