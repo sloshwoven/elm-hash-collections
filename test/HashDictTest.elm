@@ -526,6 +526,9 @@ transformSuite =
         , claimFilterFalseIsEmpty
         , claimFilterTrueLeavesUnchanged
         , claimFilterToListIsToListFilter
+        , claimPartitionUnionLeavesUnchanged
+        , claimPartitionIntersectionIsEmpty
+        , claimPartitionTrueLeftFalseRight
         ]
 
 claimMapNegateNegatesValue : C.Claim
@@ -603,6 +606,47 @@ claimFilterToListIsToListFilter =
     `C.for`
         testHashDictInvestigator
 
+claimPartitionUnionLeavesUnchanged : C.Claim
+claimPartitionUnionLeavesUnchanged =
+    C.claim
+        "partition then union leaves the HashDict unchanged"
+    `C.that`
+        (\(hdict) ->
+            let part = HD.partition (\k v -> isEven v) hdict
+            in HD.union (fst part) (snd part) |> HD.toList
+        )
+    `C.is`
+        (HD.toList)
+    `C.for`
+        testHashDictInvestigator
+
+claimPartitionIntersectionIsEmpty : C.Claim
+claimPartitionIntersectionIsEmpty =
+    C.claim
+        "partition then intersection is empty"
+    `C.true`
+        (\(hdict) ->
+            let part = HD.partition (\k v -> isEven v) hdict
+            in HD.intersect (fst part) (snd part) |> HD.isEmpty
+        )
+    `C.for`
+        testHashDictInvestigator
+
+claimPartitionTrueLeftFalseRight : C.Claim
+claimPartitionTrueLeftFalseRight =
+    C.claim
+        "partition condition is true for all left, false for all right"
+    `C.true`
+        (\(hdict) ->
+            let part = HD.partition (\k v -> isEven v) hdict
+            in
+                ((fst part) |> HD.values |> L.all isEven)
+                &&
+                ((snd part) |> HD.values |> none isEven)
+        )
+    `C.for`
+        testHashDictInvestigator
+
 -- ==== helpers ====
 
 hashBool : H.Hasher Bool comparable
@@ -616,6 +660,10 @@ altHashBool b =
 isEven : number -> Bool
 isEven n =
     n % 2 == 0
+
+none : (a -> Bool) -> List a -> Bool
+none pred list =
+    not <| L.any pred list
 
 assocAppend : (Bool, Int) -> List (Bool, Int) -> List (Bool, Int)
 assocAppend (k, v) list =
