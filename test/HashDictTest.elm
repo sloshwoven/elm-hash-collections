@@ -523,6 +523,9 @@ transformSuite =
         , claimMapLeavesKeysUnchanged
         , claimFoldlToListMapReverse
         , claimFoldrToListMap
+        , claimFilterFalseIsEmpty
+        , claimFilterTrueLeavesUnchanged
+        , claimFilterToListIsToListFilter
         ]
 
 claimMapNegateNegatesValue : C.Claim
@@ -569,6 +572,37 @@ claimFoldrToListMap =
     `C.for`
         testHashDictInvestigator
 
+claimFilterFalseIsEmpty : C.Claim
+claimFilterFalseIsEmpty =
+    C.claim
+        "filtering with false produces an empty HashDict"
+    `C.true`
+        (\(hdict) -> HD.filter (\k v -> False) hdict |> HD.isEmpty)
+    `C.for`
+        testHashDictInvestigator
+
+claimFilterTrueLeavesUnchanged : C.Claim
+claimFilterTrueLeavesUnchanged =
+    C.claim
+        "filtering with true produces an identical HashDict"
+    `C.that`
+        (\(hdict) -> HD.filter (\k v -> True) hdict |> HD.toList)
+    `C.is`
+        (HD.toList)
+    `C.for`
+        testHashDictInvestigator
+
+claimFilterToListIsToListFilter : C.Claim
+claimFilterToListIsToListFilter =
+    C.claim
+        "filter the toList is the same as toList then filter"
+    `C.that`
+        (\(hdict) -> HD.filter (\k v -> isEven v) hdict |> HD.toList)
+    `C.is`
+        (\(hdict) -> HD.toList hdict |> L.filter (\(k, v) -> isEven v))
+    `C.for`
+        testHashDictInvestigator
+
 -- ==== helpers ====
 
 hashBool : H.Hasher Bool comparable
@@ -578,6 +612,10 @@ hashBool b =
 altHashBool : H.Hasher Bool comparable
 altHashBool b =
     if b then 5 else 7
+
+isEven : number -> Bool
+isEven n =
+    n % 2 == 0
 
 assocAppend : (Bool, Int) -> List (Bool, Int) -> List (Bool, Int)
 assocAppend (k, v) list =
