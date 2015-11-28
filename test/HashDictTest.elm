@@ -600,9 +600,9 @@ claimFilterToListIsToListFilter =
     C.claim
         "filter the toList is the same as toList then filter"
     `C.that`
-        (\(hdict) -> HD.filter (\k v -> isEven v) hdict |> HD.toList)
+        (\(hdict) -> HD.filter valueIsEven hdict |> HD.toList)
     `C.is`
-        (\(hdict) -> HD.toList hdict |> L.filter (\(k, v) -> isEven v))
+        (\(hdict) -> HD.toList hdict |> L.filter (uncurry valueIsEven))
     `C.for`
         testHashDictInvestigator
 
@@ -612,7 +612,7 @@ claimPartitionUnionLeavesUnchanged =
         "partition then union leaves the HashDict unchanged"
     `C.that`
         (\(hdict) ->
-            let part = HD.partition (\k v -> isEven v) hdict
+            let part = HD.partition valueIsEven hdict
             in HD.union (fst part) (snd part) |> HD.toList
         )
     `C.is`
@@ -626,7 +626,7 @@ claimPartitionIntersectionIsEmpty =
         "partition then intersection is empty"
     `C.true`
         (\(hdict) ->
-            let part = HD.partition (\k v -> isEven v) hdict
+            let part = HD.partition valueIsEven hdict
             in HD.intersect (fst part) (snd part) |> HD.isEmpty
         )
     `C.for`
@@ -638,7 +638,7 @@ claimPartitionTrueLeftFalseRight =
         "partition condition is true for all left, false for all right"
     `C.true`
         (\(hdict) ->
-            let part = HD.partition (\k v -> isEven v) hdict
+            let part = HD.partition valueIsEven hdict
             in
                 ((fst part) |> HD.values |> L.all isEven)
                 &&
@@ -656,6 +656,10 @@ hashBool b =
 altHashBool : H.Hasher Bool comparable
 altHashBool b =
     if b then 5 else 7
+
+valueIsEven : k -> number -> Bool
+valueIsEven k v =
+    isEven v
 
 isEven : number -> Bool
 isEven n =
