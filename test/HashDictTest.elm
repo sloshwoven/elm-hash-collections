@@ -640,9 +640,9 @@ claimPartitionTrueLeftFalseRight =
         (\(hdict) ->
             let part = HD.partition valueIsEven hdict
             in
-                ((fst part) |> HD.values |> L.all isEven)
+                ((fst part) |> HD.values |> L.all U.isEven)
                 &&
-                ((snd part) |> HD.values |> none isEven)
+                ((snd part) |> HD.values |> U.none U.isEven)
         )
     `C.for`
         testHashDictInvestigator
@@ -651,15 +651,7 @@ claimPartitionTrueLeftFalseRight =
 
 valueIsEven : k -> number -> Bool
 valueIsEven k v =
-    isEven v
-
-isEven : number -> Bool
-isEven n =
-    n % 2 == 0
-
-none : (a -> Bool) -> List a -> Bool
-none pred list =
-    not <| L.any pred list
+    U.isEven v
 
 assocAppend : (Bool, Int) -> List (Bool, Int) -> List (Bool, Int)
 assocAppend (k, v) list =

@@ -326,7 +326,7 @@ claimFromListToListIsSortedList =
     `C.that`
         (\(list) -> HS.fromList U.hashBool list |> HS.toList)
     `C.is`
-        (\(list) -> unique list |> L.sortBy U.hashBool)
+        (\(list) -> U.unique list |> L.sortBy U.hashBool)
     `C.for`
         I.list I.bool
 
@@ -362,7 +362,7 @@ claimFoldlIsToListMapReverse =
     C.claim
         "building a list with foldl is toList mapped and reversed"
     `C.that`
-        (\hset -> HS.foldl prependString [] hset)
+        (\hset -> HS.foldl U.prependString [] hset)
     `C.is`
         (\hset -> HS.toList hset |> L.map toString |> L.reverse)
     `C.for`
@@ -373,7 +373,7 @@ claimFoldrIsToListMap =
     C.claim
         "building a list with foldr is toList mapped"
     `C.that`
-        (\hset -> HS.foldr prependString [] hset)
+        (\hset -> HS.foldr U.prependString [] hset)
     `C.is`
         (\hset -> HS.toList hset |> L.map toString)
     `C.for`
@@ -452,18 +452,6 @@ claimPartitionTrueLeftFalseRight =
         testHashSetInvestigator
 
 -- ==== helpers ====
-
-unique : List a -> List a
-unique list =
-    let add x l =
-        if L.any ((==) x) l
-        then l
-        else x :: l
-    in L.foldr add [] list
-
-prependString : e -> List String -> List String
-prependString e list =
-    (toString e) :: list
 
 testHashSetInvestigator : I.Investigator (HS.HashSet Bool Int)
 testHashSetInvestigator =
