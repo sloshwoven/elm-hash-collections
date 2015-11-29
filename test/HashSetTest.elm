@@ -40,7 +40,7 @@ claimEmptyIsEmpty =
     C.claim
         "empty produces a result that is empty"
     `C.true`
-        (\() -> HS.empty hashBool |> HS.isEmpty)
+        (\() -> HS.empty U.hashBool |> HS.isEmpty)
     `C.for`
         I.void
 
@@ -49,7 +49,7 @@ claimMemberFromEmptyIsFalse =
     C.claim
         "calling member with an empty HashSet always returns False"
     `C.false`
-        (\e -> HS.empty hashBool |> HS.member e)
+        (\e -> HS.empty U.hashBool |> HS.member e)
     `C.for`
         I.bool
 
@@ -58,7 +58,7 @@ claimSingletonNotEmpty =
     C.claim
         "singletons are not empty"
     `C.false`
-        (\e -> HS.singleton hashBool e |> HS.isEmpty)
+        (\e -> HS.singleton U.hashBool e |> HS.isEmpty)
     `C.for`
         I.bool
 
@@ -67,7 +67,7 @@ claimSingletonContainsElement =
     C.claim
         "singletons contain the element they were created with"
     `C.true`
-        (\e -> HS.singleton hashBool e |> HS.member e)
+        (\e -> HS.singleton U.hashBool e |> HS.member e)
     `C.for`
         I.bool
 
@@ -76,7 +76,7 @@ claimSingletonDoesNotContainOther =
     C.claim
         "singletons do not contain an element other than the one they were created with"
     `C.false`
-        (\(e1, e2) -> HS.singleton hashBool e1 |> HS.member e2)
+        (\(e1, e2) -> HS.singleton U.hashBool e1 |> HS.member e2)
     `C.for`
         U.distinctPairInvestigator I.bool
 
@@ -134,14 +134,9 @@ transformSuite =
 
 -- ==== helpers ====
 
--- TODO: move to TestUtil, remove from here and HashDictTest
-hashBool : H.Hasher Bool comparable
-hashBool b =
-    if b then 1 else 0
-
 testHashSetInvestigator : I.Investigator (HS.HashSet Bool Int)
 testHashSetInvestigator =
-    makeTestHashSetInvestigator hashBool
+    makeTestHashSetInvestigator U.hashBool
 
 makeTestHashSetInvestigator : H.Hasher Bool comparable -> I.Investigator (HS.HashSet Bool comparable)
 makeTestHashSetInvestigator hasher =

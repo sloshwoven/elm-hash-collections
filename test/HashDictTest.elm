@@ -49,7 +49,7 @@ claimEmptyIsEmpty =
     C.claim
         "empty produces a result that is empty"
     `C.true`
-        (\() -> HD.empty hashBool |> HD.isEmpty)
+        (\() -> HD.empty U.hashBool |> HD.isEmpty)
     `C.for`
         I.void
 
@@ -58,7 +58,7 @@ claimMemberFromEmptyIsFalse =
     C.claim
         "calling member with an empty HashDict always returns False"
     `C.false`
-        (\k -> HD.empty hashBool |> HD.member k)
+        (\k -> HD.empty U.hashBool |> HD.member k)
     `C.for`
         I.bool
 
@@ -67,7 +67,7 @@ claimGetFromEmptyIsNothing =
     C.claim
         "getting from an empty HashDict always returns Nothing"
     `C.that`
-        (\k -> HD.empty hashBool |> HD.get k)
+        (\k -> HD.empty U.hashBool |> HD.get k)
     `C.is`
         always Nothing
     `C.for`
@@ -78,7 +78,7 @@ claimSingletonNotEmpty =
     C.claim
         "singletons are not empty"
     `C.false`
-        (\(k, v) -> HD.singleton hashBool k v |> HD.isEmpty)
+        (\(k, v) -> HD.singleton U.hashBool k v |> HD.isEmpty)
     `C.for`
         I.tuple (I.bool, I.int)
 
@@ -87,7 +87,7 @@ claimSingletonContainsKey =
     C.claim
         "singletons contain the key they were created with"
     `C.true`
-        (\(k, v) -> HD.singleton hashBool k v |> HD.member k)
+        (\(k, v) -> HD.singleton U.hashBool k v |> HD.member k)
     `C.for`
         I.tuple (I.bool, I.int)
 
@@ -96,7 +96,7 @@ claimSingletonContainsValue =
     C.claim
         "singletons contain the value they were created with"
     `C.that`
-        (\(k, v) -> HD.singleton hashBool k v |> HD.get k)
+        (\(k, v) -> HD.singleton U.hashBool k v |> HD.get k)
     `C.is`
         (Just << snd)
     `C.for`
@@ -107,7 +107,7 @@ claimSingletonDoesNotContainOther =
     C.claim
         "singletons do not contain a key other than the one they were created with"
     `C.false`
-        (\((k1, k2), v) -> HD.singleton hashBool k1 v |> HD.member k2)
+        (\((k1, k2), v) -> HD.singleton U.hashBool k1 v |> HD.member k2)
     `C.for`
         I.tuple (U.distinctPairInvestigator I.bool, I.int)
 
@@ -412,7 +412,7 @@ claimEmptyHasNoKeys =
     C.claim
         "an empty HashDict has no keys"
     `C.true`
-        (\() -> HD.empty hashBool |> HD.keys |> L.isEmpty)
+        (\() -> HD.empty U.hashBool |> HD.keys |> L.isEmpty)
     `C.for`
         I.void
 
@@ -421,7 +421,7 @@ claimSingletonHasOneKey =
     C.claim
         "a singleton HashDict has the one key it was created with"
     `C.that`
-        (\(k, v) -> HD.singleton hashBool k v |> HD.keys)
+        (\(k, v) -> HD.singleton U.hashBool k v |> HD.keys)
     `C.is`
         (\(k, v) -> [k])
     `C.for`
@@ -459,7 +459,7 @@ claimEmptyHasNoValues =
     C.claim
         "an empty HashDict has no values"
     `C.true`
-        (\() -> HD.empty hashBool |> HD.values |> L.isEmpty)
+        (\() -> HD.empty U.hashBool |> HD.values |> L.isEmpty)
     `C.for`
         I.void
 
@@ -468,7 +468,7 @@ claimSingletonHasOneValue =
     C.claim
         "a singleton HashDict has the one value it was created with"
     `C.that`
-        (\(k, v) -> HD.singleton hashBool k v |> HD.values)
+        (\(k, v) -> HD.singleton U.hashBool k v |> HD.values)
     `C.is`
         (\(k, v) -> [v])
     `C.for`
@@ -508,9 +508,9 @@ claimFromListToListIsSortedAssocList =
     C.claim
         "fromList composed with toList produces a sorted association list"
     `C.that`
-        (\(list) -> HD.fromList hashBool list |> HD.toList)
+        (\(list) -> HD.fromList U.hashBool list |> HD.toList)
     `C.is`
-        (\(list) -> L.foldr assocAppend [] list |> L.sortBy (hashBool << fst))
+        (\(list) -> L.foldr assocAppend [] list |> L.sortBy (U.hashBool << fst))
     `C.for`
         I.list (I.tuple (I.bool, I.int))
 
@@ -649,14 +649,6 @@ claimPartitionTrueLeftFalseRight =
 
 -- ==== helpers ====
 
-hashBool : H.Hasher Bool comparable
-hashBool b =
-    if b then 1 else 0
-
-altHashBool : H.Hasher Bool comparable
-altHashBool b =
-    if b then 5 else 7
-
 valueIsEven : k -> number -> Bool
 valueIsEven k v =
     isEven v
@@ -695,11 +687,11 @@ appendStrings k v =
 
 testHashDictInvestigator : I.Investigator (HD.HashDict Bool Int Int)
 testHashDictInvestigator =
-    makeTestHashDictInvestigator hashBool
+    makeTestHashDictInvestigator U.hashBool
 
 altTestHashDictInvestigator : I.Investigator (HD.HashDict Bool Int Int)
 altTestHashDictInvestigator =
-    makeTestHashDictInvestigator altHashBool
+    makeTestHashDictInvestigator U.altHashBool
 
 makeTestHashDictInvestigator : H.Hasher Bool comparable -> I.Investigator (HD.HashDict Bool comparable Int)
 makeTestHashDictInvestigator hasher =
