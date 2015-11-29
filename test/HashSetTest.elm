@@ -351,7 +351,7 @@ claimMapToListIsToListMap =
     C.claim
         "map toList is toList map sorted"
     `C.that`
-        (\hset -> HS.map not U.hashBool hset |> HS.toList)
+        (\hset -> HS.map not hset.hasher hset |> HS.toList)
     `C.is`
         (\hset -> HS.toList hset |> L.map not |> L.sortBy U.hashBool)
     `C.for`
