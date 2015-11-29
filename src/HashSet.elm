@@ -2,7 +2,7 @@ module HashSet
     ( HashSet
     , empty, singleton, insert, remove
     , isEmpty, member
-    , foldl, foldr, map
+    , foldl, foldr, map, map'
     , filter, partition
     , union, intersect, diff
     , toList, fromList
@@ -25,7 +25,7 @@ module HashSet
 @docs toList, fromList
 
 # Transform
-@docs map, foldl, foldr, filter, partition
+@docs map, map', foldl, foldr, filter, partition
 -}
 
 import Dict as D
@@ -125,6 +125,11 @@ fromList hasher elems =
 map : (e -> e') -> H.Hasher e' comparable -> HashSet e comparable -> HashSet e' comparable
 map f hasher hset =
     fromList hasher (L.map f <| D.values hset.hashToElem)
+
+{-|-}
+map' : (e -> e) -> HashSet e comparable -> HashSet e comparable
+map' f hset =
+    fromList hset.hasher (L.map f <| D.values hset.hashToElem)
 
 {-|
 uses hash order
