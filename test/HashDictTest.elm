@@ -701,7 +701,7 @@ altTestHashDictInvestigator : I.Investigator (HD.HashDict Bool Int Int)
 altTestHashDictInvestigator =
     makeTestHashDictInvestigator altHashBool
 
-makeTestHashDictInvestigator : H.Hasher Bool comparable -> I.Investigator (HD.HashDict Bool Int Int)
+makeTestHashDictInvestigator : H.Hasher Bool comparable -> I.Investigator (HD.HashDict Bool comparable Int)
 makeTestHashDictInvestigator hasher =
     let generator =
             hashDictGenerator hasher RB.bool RI.anyInt
