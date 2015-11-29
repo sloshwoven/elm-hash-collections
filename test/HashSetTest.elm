@@ -337,6 +337,7 @@ transformSuite =
     C.suite "transform"
         [ claimMapToListIsToListMap
         , claimMapPrimeToListIsToListMap
+        , claimMapPrimeHasher
         , claimFoldlIsToListMapReverse
         , claimFoldrIsToListMap
         , claimFilterFalseIsEmpty
@@ -368,6 +369,17 @@ claimMapPrimeToListIsToListMap =
         (\hset -> HS.toList hset |> L.map not |> L.sortBy U.hashBool)
     `C.for`
         testHashSetInvestigator
+
+claimMapPrimeHasher : C.Claim
+claimMapPrimeHasher =
+    C.claim
+        ("map' hasher comes from the HashSet")
+    `C.that`
+        (\(hset, e) -> HS.map' not hset |> (\hset2 -> hset2.hasher e))
+    `C.is`
+        (\(hset, e) -> hset.hasher e)
+    `C.for`
+        I.tuple (testHashSetInvestigator, I.bool)
 
 claimFoldlIsToListMapReverse : C.Claim
 claimFoldlIsToListMapReverse =
