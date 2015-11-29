@@ -21,6 +21,8 @@ hashSetSuite =
     ]
     |> C.suite "HashSet"
 
+-- ==== build ====
+
 buildSuite : C.Claim
 buildSuite =
     C.suite "build"
@@ -115,6 +117,8 @@ claimRemoveAllIsEmpty =
         (\hset -> HS.foldl (\e r -> HS.remove e r) hset hset |> HS.isEmpty)
     `C.for`
         testHashSetInvestigator
+
+-- ==== combine ====
 
 combineSuite : C.Claim
 combineSuite =
@@ -265,9 +269,13 @@ claimDiffHasherFromFirst : C.Claim
 claimDiffHasherFromFirst =
     claimHasherFromFirst "diff" HS.diff
 
+-- ==== lists ====
+
 listsSuite : C.Claim
 listsSuite =
     C.suite "lists" []
+
+-- ==== transform ====
 
 transformSuite : C.Claim
 transformSuite =
