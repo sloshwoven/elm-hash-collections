@@ -4,6 +4,7 @@ import Check as C
 import Check.Investigator as I
 import Hasher as H
 import HashSet as HS
+import List as L
 import Random as R
 import Random.Bool as RB
 import Random.Extra as RE
@@ -117,7 +118,152 @@ claimRemoveAllIsEmpty =
 
 combineSuite : C.Claim
 combineSuite =
-    C.suite "combine" []
+    C.suite "combine"
+        [ claimComponentElementsInUnion
+        , claimUnionElementsInComponent
+        , claimUnionEmptiness
+        , claimUnionHasherFromFirst
+        , claimComponentElementsInIntersect
+        , claimIntersectElementsInBothComponents
+        , claimIntersectEmptiness
+        , claimIntersectHasherFromFirst
+        , claimComponentElementsInDiff
+        , claimDiffElementsInFirst
+        , claimDiffEmptiness
+        , claimDiffHasherFromFirst
+        ]
+
+claimComponentElementsInUnion : C.Claim
+claimComponentElementsInUnion =
+    C.claim
+        "all elements of the input HashSets are in their union"
+    `C.true`
+        (\(hset1, hset2) ->
+            let union = HS.union hset1 hset2
+                inUnion e = HS.member e union
+            in
+                L.append (HS.toList hset1) (HS.toList hset2)
+                |> L.all inUnion
+        )
+    `C.for`
+        I.tuple (testHashSetInvestigator, testHashSetInvestigator)
+
+claimUnionElementsInComponent : C.Claim
+claimUnionElementsInComponent =
+    C.claim
+        "all elements of a union are in at least one of the HashSets"
+    `C.true`
+        (\(hset1, hset2) ->
+            let inComponent e = HS.member e hset1 || HS.member e hset2
+            in HS.union hset1 hset2 |> HS.toList |> L.all inComponent
+        )
+    `C.for`
+        I.tuple (testHashSetInvestigator, testHashSetInvestigator)
+
+claimUnionEmptiness : C.Claim
+claimUnionEmptiness =
+    C.claim
+        "unions are empty if and only if both components are empty"
+    `C.that`
+        (\(hset1, hset2) -> HS.union hset1 hset2 |> HS.isEmpty)
+    `C.is`
+        (\(hset1, hset2) -> HS.isEmpty hset1 && HS.isEmpty hset2)
+    `C.for`
+        I.tuple (testHashSetInvestigator, testHashSetInvestigator)
+
+claimUnionHasherFromFirst : C.Claim
+claimUnionHasherFromFirst =
+    claimHasherFromFirst "union" HS.union
+
+claimComponentElementsInIntersect : C.Claim
+claimComponentElementsInIntersect =
+    C.claim
+        "all elements that appear in both input HashSets are in their intersect"
+    `C.true`
+        (\(hset1, hset2) ->
+            let intersect = HS.intersect hset1 hset2
+                inIntersect e = HS.member e intersect
+                inHSet2 e = HS.member e hset2
+            in
+                L.filter inHSet2 (HS.toList hset1)
+                |> L.all inIntersect
+        )
+    `C.for`
+        I.tuple (testHashSetInvestigator, testHashSetInvestigator)
+
+claimIntersectElementsInBothComponents : C.Claim
+claimIntersectElementsInBothComponents =
+    C.claim
+        "all elements of an intersect are in both input HashSets"
+    `C.true`
+        (\(hset1, hset2) ->
+            let inBothComponents e = HS.member e hset1 && HS.member e hset2
+            in HS.intersect hset1 hset2 |> HS.toList |> L.all inBothComponents
+        )
+    `C.for`
+        I.tuple (testHashSetInvestigator, testHashSetInvestigator)
+
+claimIntersectEmptiness : C.Claim
+claimIntersectEmptiness =
+    C.claim
+        "intersections are empty if and only if the components have no keys in common"
+    `C.that`
+        (\(hset1, hset2) -> HS.intersect hset1 hset2 |> HS.isEmpty)
+    `C.is`
+        (\(hset1, hset2) ->
+            let notInHSet2 e = not (HS.member e hset2)
+            in HS.toList hset1 |> L.all notInHSet2
+        )
+    `C.for`
+        I.tuple (testHashSetInvestigator, testHashSetInvestigator)
+
+claimIntersectHasherFromFirst : C.Claim
+claimIntersectHasherFromFirst =
+    claimHasherFromFirst "intersection" HS.intersect
+
+claimComponentElementsInDiff : C.Claim
+claimComponentElementsInDiff =
+    C.claim
+        "all elements of the first HashSet that are not in the second are in the diff"
+    `C.that`
+        (\(hset1, hset2) -> HS.diff hset1 hset2 |> HS.toList)
+    `C.is`
+        (\(hset1, hset2) ->
+            let notInHSet2 e = not (HS.member e hset2)
+            in hset1 |> HS.toList |> L.filter notInHSet2
+        )
+    `C.for`
+        I.tuple (testHashSetInvestigator, testHashSetInvestigator)
+
+claimDiffElementsInFirst : C.Claim
+claimDiffElementsInFirst =
+    C.claim
+        "all diff elements are in the first HashSet"
+    `C.true`
+        (\(hset1, hset2) ->
+            let inHSet1 e = HS.member e hset1
+            in HS.diff hset1 hset2 |> HS.toList |> L.all inHSet1
+        )
+    `C.for`
+        I.tuple (testHashSetInvestigator, testHashSetInvestigator)
+
+claimDiffEmptiness : C.Claim
+claimDiffEmptiness =
+    C.claim
+        "diffs are empty if and only if all elements of the first are in the second"
+    `C.that`
+        (\(hset1, hset2) -> HS.diff hset1 hset2 |> HS.isEmpty)
+    `C.is`
+        (\(hset1, hset2) ->
+            let inHSet2 e = HS.member e hset2
+            in HS.toList hset1 |> L.all inHSet2
+        )
+    `C.for`
+        I.tuple (testHashSetInvestigator, testHashSetInvestigator)
+
+claimDiffHasherFromFirst : C.Claim
+claimDiffHasherFromFirst =
+    claimHasherFromFirst "diff" HS.diff
 
 listsSuite : C.Claim
 listsSuite =
@@ -132,6 +278,10 @@ transformSuite =
 testHashSetInvestigator : I.Investigator (HS.HashSet Bool Int)
 testHashSetInvestigator =
     makeTestHashSetInvestigator U.hashBool
+
+altTestHashSetInvestigator : I.Investigator (HS.HashSet Bool Int)
+altTestHashSetInvestigator =
+    makeTestHashSetInvestigator U.altHashBool
 
 makeTestHashSetInvestigator : H.Hasher Bool comparable -> I.Investigator (HS.HashSet Bool comparable)
 makeTestHashSetInvestigator hasher =
@@ -161,3 +311,14 @@ hashSetShrinker elemShrinker hset =
         (HS.foldl removeElem [] hset)
         ++
         (HS.foldl shrinkElem [] hset)
+
+claimHasherFromFirst : String -> (HS.HashSet Bool comparable -> HS.HashSet Bool comparable -> HS.HashSet Bool comparable) -> C.Claim
+claimHasherFromFirst name combiner =
+    C.claim
+        (name ++ " hasher comes from the first HashSet")
+    `C.that`
+        (\(hset1, hset2, e) -> combiner hset1 hset2 |> (\u -> u.hasher e))
+    `C.is`
+        (\(hset1, hset2, e) -> hset1.hasher e)
+    `C.for`
+        I.tuple3 (testHashSetInvestigator, altTestHashSetInvestigator, I.bool)
