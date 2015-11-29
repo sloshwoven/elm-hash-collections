@@ -334,7 +334,122 @@ claimFromListToListIsSortedList =
 
 transformSuite : C.Claim
 transformSuite =
-    C.suite "transform" []
+    C.suite "transform"
+        [ claimMapToListIsToListMap
+        , claimFoldlIsToListMapReverse
+        , claimFoldrIsToListMap
+        , claimFilterFalseIsEmpty
+        , claimFilterTrueLeavesUnchanged
+        , claimFilterToListIsToListFilter
+        , claimPartitionUnionLeavesUnchanged
+        , claimPartitionIntersectionIsEmpty
+        , claimPartitionTrueLeftFalseRight
+        ]
+
+claimMapToListIsToListMap : C.Claim
+claimMapToListIsToListMap =
+    C.claim
+        "map toList is toList map sorted"
+    `C.that`
+        (\hset -> HS.map not U.hashBool hset |> HS.toList)
+    `C.is`
+        (\hset -> HS.toList hset |> L.map not |> L.sortBy U.hashBool)
+    `C.for`
+        testHashSetInvestigator
+
+claimFoldlIsToListMapReverse : C.Claim
+claimFoldlIsToListMapReverse =
+    C.claim
+        "building a list with foldl is toList mapped and reversed"
+    `C.that`
+        (\hset -> HS.foldl prependString [] hset)
+    `C.is`
+        (\hset -> HS.toList hset |> L.map toString |> L.reverse)
+    `C.for`
+        testHashSetInvestigator
+
+claimFoldrIsToListMap : C.Claim
+claimFoldrIsToListMap =
+    C.claim
+        "building a list with foldr is toList mapped"
+    `C.that`
+        (\hset -> HS.foldr prependString [] hset)
+    `C.is`
+        (\hset -> HS.toList hset |> L.map toString)
+    `C.for`
+        testHashSetInvestigator
+
+claimFilterFalseIsEmpty : C.Claim
+claimFilterFalseIsEmpty =
+    C.claim
+        "filtering with false produces an empty HashSet"
+    `C.true`
+        (\hset -> HS.filter (always False) hset |> HS.isEmpty)
+    `C.for`
+        testHashSetInvestigator
+
+claimFilterTrueLeavesUnchanged : C.Claim
+claimFilterTrueLeavesUnchanged =
+    C.claim
+        "filtering with true produces an identical HashSet"
+    `C.that`
+        (\hset -> HS.filter (always True) hset |> HS.toList)
+    `C.is`
+        (HS.toList)
+    `C.for`
+        testHashSetInvestigator
+
+claimFilterToListIsToListFilter : C.Claim
+claimFilterToListIsToListFilter =
+    C.claim
+        "filter the toList is the same as toList then filter"
+    `C.that`
+        (\hset -> HS.filter identity hset |> HS.toList)
+    `C.is`
+        (\hset -> HS.toList hset |> L.filter identity)
+    `C.for`
+        testHashSetInvestigator
+
+claimPartitionUnionLeavesUnchanged : C.Claim
+claimPartitionUnionLeavesUnchanged =
+    C.claim
+        "partition then union leaves the HashSet unchanged"
+    `C.that`
+        (\hset ->
+            let part = HS.partition identity hset
+            in HS.union (fst part) (snd part) |> HS.toList
+        )
+    `C.is`
+        (HS.toList)
+    `C.for`
+        testHashSetInvestigator
+
+claimPartitionIntersectionIsEmpty : C.Claim
+claimPartitionIntersectionIsEmpty =
+    C.claim
+        "partition then intersection is empty"
+    `C.true`
+        (\hset ->
+            let part = HS.partition identity hset
+            in HS.intersect (fst part) (snd part) |> HS.isEmpty
+        )
+    `C.for`
+        testHashSetInvestigator
+
+claimPartitionTrueLeftFalseRight : C.Claim
+claimPartitionTrueLeftFalseRight =
+    C.claim
+        "partition condition is true for all left, false for all right"
+    `C.true`
+        (\hset ->
+            let part = HS.partition identity hset
+            in
+                ((fst part) |> HS.toList |> L.all identity)
+                &&
+                ((snd part) |> HS.toList |> L.all not)
+        )
+    `C.for`
+        testHashSetInvestigator
 
 -- ==== helpers ====
 
@@ -345,6 +460,10 @@ unique list =
         then l
         else x :: l
     in L.foldr add [] list
+
+prependString : e -> List String -> List String
+prependString e list =
+    (toString e) :: list
 
 testHashSetInvestigator : I.Investigator (HS.HashSet Bool Int)
 testHashSetInvestigator =
