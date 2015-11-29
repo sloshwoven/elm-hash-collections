@@ -497,9 +497,9 @@ claimToListIsKeysZippedWithValues =
     C.claim
         "toList is keys zipped with values"
     `C.that`
-        (\(hdict) -> HD.toList hdict)
+        (\hdict -> HD.toList hdict)
     `C.is`
-        (\(hdict) -> L.map2 (,) (HD.keys hdict) (HD.values hdict))
+        (\hdict -> L.map2 (,) (HD.keys hdict) (HD.values hdict))
     `C.for`
         testHashDictInvestigator
 
@@ -508,9 +508,9 @@ claimFromListToListIsSortedAssocList =
     C.claim
         "fromList composed with toList produces a sorted association list"
     `C.that`
-        (\(list) -> HD.fromList U.hashBool list |> HD.toList)
+        (\list -> HD.fromList U.hashBool list |> HD.toList)
     `C.is`
-        (\(list) -> L.foldr assocAppend [] list |> L.sortBy (U.hashBool << fst))
+        (\list -> L.foldr assocAppend [] list |> L.sortBy (U.hashBool << fst))
     `C.for`
         I.list (I.tuple (I.bool, I.int))
 
@@ -547,7 +547,7 @@ claimMapLeavesKeysUnchanged =
     C.claim
         "mapping does not change the keys"
     `C.that`
-        (\(hdict) -> HD.map negateValue hdict |> HD.keys)
+        (\hdict -> HD.map negateValue hdict |> HD.keys)
     `C.is`
         (HD.keys)
     `C.for`
@@ -558,9 +558,9 @@ claimFoldlToListMapReverse =
     C.claim
         "building a list with foldl is toList mapped and reversed"
     `C.that`
-        (\(hdict) -> HD.foldl prependKeyValueString [] hdict)
+        (\hdict -> HD.foldl prependKeyValueString [] hdict)
     `C.is`
-        (\(hdict) -> HD.toList hdict |> L.map (uncurry appendStrings) |> L.reverse)
+        (\hdict -> HD.toList hdict |> L.map (uncurry appendStrings) |> L.reverse)
     `C.for`
         testHashDictInvestigator
 
@@ -569,9 +569,9 @@ claimFoldrToListMap =
     C.claim
         "building a list with foldr is toList mapped"
     `C.that`
-        (\(hdict) -> HD.foldr prependKeyValueString [] hdict)
+        (\hdict -> HD.foldr prependKeyValueString [] hdict)
     `C.is`
-        (\(hdict) -> HD.toList hdict |> L.map (uncurry appendStrings))
+        (\hdict -> HD.toList hdict |> L.map (uncurry appendStrings))
     `C.for`
         testHashDictInvestigator
 
@@ -580,7 +580,7 @@ claimFilterFalseIsEmpty =
     C.claim
         "filtering with false produces an empty HashDict"
     `C.true`
-        (\(hdict) -> HD.filter (\k v -> False) hdict |> HD.isEmpty)
+        (\hdict -> HD.filter (\k v -> False) hdict |> HD.isEmpty)
     `C.for`
         testHashDictInvestigator
 
@@ -589,7 +589,7 @@ claimFilterTrueLeavesUnchanged =
     C.claim
         "filtering with true produces an identical HashDict"
     `C.that`
-        (\(hdict) -> HD.filter (\k v -> True) hdict |> HD.toList)
+        (\hdict -> HD.filter (\k v -> True) hdict |> HD.toList)
     `C.is`
         (HD.toList)
     `C.for`
@@ -600,9 +600,9 @@ claimFilterToListIsToListFilter =
     C.claim
         "filter the toList is the same as toList then filter"
     `C.that`
-        (\(hdict) -> HD.filter valueIsEven hdict |> HD.toList)
+        (\hdict -> HD.filter valueIsEven hdict |> HD.toList)
     `C.is`
-        (\(hdict) -> HD.toList hdict |> L.filter (uncurry valueIsEven))
+        (\hdict -> HD.toList hdict |> L.filter (uncurry valueIsEven))
     `C.for`
         testHashDictInvestigator
 
@@ -611,7 +611,7 @@ claimPartitionUnionLeavesUnchanged =
     C.claim
         "partition then union leaves the HashDict unchanged"
     `C.that`
-        (\(hdict) ->
+        (\hdict ->
             let part = HD.partition valueIsEven hdict
             in HD.union (fst part) (snd part) |> HD.toList
         )
@@ -625,7 +625,7 @@ claimPartitionIntersectionIsEmpty =
     C.claim
         "partition then intersection is empty"
     `C.true`
-        (\(hdict) ->
+        (\hdict ->
             let part = HD.partition valueIsEven hdict
             in HD.intersect (fst part) (snd part) |> HD.isEmpty
         )
@@ -637,7 +637,7 @@ claimPartitionTrueLeftFalseRight =
     C.claim
         "partition condition is true for all left, false for all right"
     `C.true`
-        (\(hdict) ->
+        (\hdict ->
             let part = HD.partition valueIsEven hdict
             in
                 ((fst part) |> HD.values |> L.all U.isEven)

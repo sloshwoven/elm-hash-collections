@@ -324,9 +324,9 @@ claimFromListToListIsSortedList =
     C.claim
         "fromList composed with toList produces a sorted unique list"
     `C.that`
-        (\(list) -> HS.fromList U.hashBool list |> HS.toList)
+        (\list -> HS.fromList U.hashBool list |> HS.toList)
     `C.is`
-        (\(list) -> U.unique list |> L.sortBy U.hashBool)
+        (\list -> U.unique list |> L.sortBy U.hashBool)
     `C.for`
         I.list I.bool
 
