@@ -1,5 +1,4 @@
 # TODO
 
-1. Complete tests.
-2. Complete docs.
-3. Publish package.
+1. Complete docs.
+2. Publish package.
