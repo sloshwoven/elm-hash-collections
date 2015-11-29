@@ -14,7 +14,6 @@ import TestUtil as U
 hashSetSuite : C.Claim
 hashSetSuite =
     [ buildSuite
-    , querySuite
     , combineSuite
     , listsSuite
     , transformSuite
@@ -115,10 +114,6 @@ claimRemoveAllIsEmpty =
         (\hset -> HS.foldl (\e r -> HS.remove e r) hset hset |> HS.isEmpty)
     `C.for`
         testHashSetInvestigator
-
-querySuite : C.Claim
-querySuite =
-    C.suite "query" []
 
 combineSuite : C.Claim
 combineSuite =
