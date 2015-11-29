@@ -273,7 +273,62 @@ claimDiffHasherFromFirst =
 
 listsSuite : C.Claim
 listsSuite =
-    C.suite "lists" []
+    C.suite "lists"
+        [ claimEmptyHasNoElements
+        , claimSingletonHasOneElement
+        , claimElementInListAfterInsert
+        , claimElementNotInListAfterRemove
+        , claimFromListToListIsSortedList
+        ]
+
+claimEmptyHasNoElements : C.Claim
+claimEmptyHasNoElements =
+    C.claim
+        "an empty HashSet converted to a list has no elements"
+    `C.true`
+        (\() -> HS.empty U.hashBool |> HS.toList |> L.isEmpty)
+    `C.for`
+        I.void
+
+claimSingletonHasOneElement : C.Claim
+claimSingletonHasOneElement =
+    C.claim
+        "a singleton HashSet converted to a list has only the one element it was created with"
+    `C.that`
+        (\e -> HS.singleton U.hashBool e |> HS.toList)
+    `C.is`
+        (\e -> [e])
+    `C.for`
+        I.bool
+
+claimElementInListAfterInsert : C.Claim
+claimElementInListAfterInsert =
+    C.claim
+        "after inserting, the element is in the list"
+    `C.true`
+        (\(hset, e) -> HS.insert e hset |> HS.toList |> L.any ((==) e))
+    `C.for`
+        I.tuple (testHashSetInvestigator, I.bool)
+
+claimElementNotInListAfterRemove : C.Claim
+claimElementNotInListAfterRemove =
+    C.claim
+        "after removing an element, it is no longer in the list"
+    `C.false`
+        (\(hset, e) -> HS.insert e hset |> HS.remove e |> HS.toList |> L.any ((==) e))
+    `C.for`
+        I.tuple (testHashSetInvestigator, I.bool)
+
+claimFromListToListIsSortedList : C.Claim
+claimFromListToListIsSortedList =
+    C.claim
+        "fromList composed with toList produces a sorted unique list"
+    `C.that`
+        (\(list) -> HS.fromList U.hashBool list |> HS.toList)
+    `C.is`
+        (\(list) -> unique list |> L.sortBy U.hashBool)
+    `C.for`
+        I.list I.bool
 
 -- ==== transform ====
 
@@ -282,6 +337,14 @@ transformSuite =
     C.suite "transform" []
 
 -- ==== helpers ====
+
+unique : List a -> List a
+unique list =
+    let add x l =
+        if L.any ((==) x) l
+        then l
+        else x :: l
+    in L.foldr add [] list
 
 testHashSetInvestigator : I.Investigator (HS.HashSet Bool Int)
 testHashSetInvestigator =
