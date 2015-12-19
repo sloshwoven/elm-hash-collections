@@ -255,7 +255,7 @@ Example:
 -}
 map' : (e -> e) -> HashSet e comparable -> HashSet e comparable
 map' f hset =
-    fromList hset.hasher (L.map f <| D.values hset.hashToElem)
+    map f hset.hasher hset
 
 {-| Left fold over a `HashSet` to combine its elements into one result.
 
