@@ -8,3 +8,4 @@
 ## TODO maybe
 
 1. `empty'` for comparables that uses identity as the hasher?
+2. `singleton'` in a similar vein?
