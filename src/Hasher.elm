@@ -5,7 +5,10 @@ module Hasher (Hasher) where
 @docs Hasher
 -}
 
-{-| A function that hashes a value to a comparable.
+{-| A function that hashes a value to a `comparable`.
+
+`v`: value type
+`comparable`: hash type
 -}
 type alias Hasher v comparable =
     v -> comparable
