@@ -39,7 +39,8 @@ import Set as S
 - `comparable`: hash type
 
 - `hasher`: a function that turns elements into unique `comparable` values
-- `hashToElem`: a `Dict` of hashes to elements -}
+- `hashToElem`: a `Dict` of hashes to elements
+-}
 type alias HashSet e comparable =
     { hasher     : H.Hasher e comparable
     , hashToElem : D.Dict comparable e
@@ -230,7 +231,7 @@ fromList hasher elems =
 
 -- transform
 
-{-| Map every element of a `HashSet` to a new `HashSet`.
+{-| Create a new `HashSet` by mapping every element of another `HashSet`.
 
 Usage: `map f hasher hset`
 
