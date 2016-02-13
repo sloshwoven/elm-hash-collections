@@ -232,10 +232,6 @@ fromList hasher elems =
 
 {-| Map every element of a `HashSet` to a new `HashSet`.
 
-Note: the hash type of the new `HashSet` must be the same as the hash type of
-the original `HashSet` (since there is no way to distinguish two different
-`comparable` types in an Elm function signature).
-
 Usage: `map f hasher hset`
 
 - `f`: mapping function
@@ -245,9 +241,9 @@ Usage: `map f hasher hset`
 Example:
 
     people = HS.fromList .id [{id = 1, name = "Alice"}, {id = 2, name = "Bob"}]
-    HS.map .id identity people -- contains 1 and 2
+    HS.map .name identity people -- contains "Alice" and "Bob"
 -}
-map : (e -> e') -> H.Hasher e' comparable -> HashSet e comparable -> HashSet e' comparable
+map : (e1 -> e2) -> H.Hasher e2 comparable2 -> HashSet e1 comparable1 -> HashSet e2 comparable2
 map f hasher hset =
     fromList hasher (L.map f <| D.values hset.hashToElem)
 
