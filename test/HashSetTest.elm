@@ -9,6 +9,7 @@ import Random as R
 import Random.Bool as RB
 import Random.Extra as RE
 import Random.List as RL
+import Set
 import Shrink as S
 import TestUtil as U
 
@@ -31,6 +32,7 @@ buildSuite =
     , claimSingletonNotEmpty
     , claimSingletonContainsElement
     , claimSingletonDoesNotContainOther
+    , claimFromSetIsToListFromList
     , claimInsertMakesNonEmpty
     , claimElementPresentAfterInsert
     , claimElementNotPresentAfterRemove
@@ -81,6 +83,17 @@ claimSingletonDoesNotContainOther =
         (\(e1, e2) -> HS.singleton U.hashBool e1 |> HS.member e2)
     `C.for`
         U.distinctPairInvestigator I.bool
+
+claimFromSetIsToListFromList : C.Claim
+claimFromSetIsToListFromList =
+    C.claim
+        "fromSet is Set.toList >> HashSet.fromList identity"
+    `C.that`
+        HS.fromSet
+    `C.is`
+        (Set.toList >> HS.fromList identity)
+    `C.for`
+        U.intSetInvestigator
 
 claimInsertMakesNonEmpty : C.Claim
 claimInsertMakesNonEmpty =

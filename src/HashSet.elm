@@ -1,6 +1,6 @@
 module HashSet
     ( HashSet
-    , empty, singleton, insert, remove
+    , empty, singleton, fromSet, insert, remove
     , isEmpty, member
     , foldl, foldr, map, map'
     , filter, partition
@@ -13,7 +13,7 @@ module HashSet
 @docs HashSet
 
 # Build
-@docs empty, singleton, insert, remove
+@docs empty, singleton, fromSet, insert, remove
 
 # Query
 @docs isEmpty, member
@@ -31,6 +31,7 @@ module HashSet
 import Dict as D
 import Hasher as H
 import List as L
+import Set as S
 
 {-| A collection of elements without order or duplicates.
 
@@ -70,6 +71,16 @@ singleton hasher elem =
     { hasher     = hasher
     , hashToElem = D.singleton (hasher elem) elem
     }
+
+{-| Create a `HashSet` from a `Set`, using `identity` as the hasher.
+
+Usage: `fromSet s`
+
+- `s`: the `Set`
+-}
+fromSet : S.Set comparable -> HashSet comparable comparable
+fromSet s =
+    S.foldl insert (empty identity) s
 
 {-| Create a `HashSet` by adding an element to another `HashSet`.
 

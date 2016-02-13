@@ -6,6 +6,7 @@ module TestUtil
     , prependString
     , isEven
     , distinctPairInvestigator
+    , intSetInvestigator
     ) where
 
 import Check.Investigator as I
@@ -13,6 +14,9 @@ import Hasher as H
 import List as L
 import Random as R
 import Random.Extra as RE
+import Random.Int as RI
+import Random.Set as RS
+import Set
 import Shrink as S
 
 hashBool : H.Hasher Bool comparable
@@ -55,3 +59,12 @@ distinctPairOf : R.Generator a -> R.Generator (a, a)
 distinctPairOf gen =
     let isDifferent (x, y) = x /= y
     in RE.keepIf isDifferent <| R.pair gen gen
+
+intSetInvestigator : I.Investigator (Set.Set Int)
+intSetInvestigator =
+    I.investigator (RS.set 10 RI.anyInt) setShrinker
+
+setShrinker : S.Shrinker (Set.Set comparable)
+setShrinker s =
+    let without e = Set.remove e s
+    in Set.toList s |> L.map without
