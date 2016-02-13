@@ -93,10 +93,10 @@ insert k v hdict =
 
 {-| Create a `HashDict` by updating a key/value pair of another `HashDict`.
 
-Usage: `update k alter hdict`
+Usage: `update k up hdict`
 
 - `k`: key
-- `alter`: alteration function
+- `up`: updating function
 - `hdict`: starting `HashDict`
 
 Example:
@@ -116,12 +116,12 @@ Example:
     HD.update eve (\maybeScore -> Just 6) scores
 -}
 update : k -> (Maybe v -> Maybe v) -> HashDict k comparable v -> HashDict k comparable v
-update k alter hdict =
-    let alter' mkv =
-        M.map snd mkv |> alter |> M.map (\v -> (k, v))
+update k up hdict =
+    let up' mkv =
+        M.map snd mkv |> up |> M.map (\v -> (k, v))
     in
         { hdict |
-            hashToKV <- D.update (hdict.hasher k) alter' hdict.hashToKV
+            hashToKV <- D.update (hdict.hasher k) up' hdict.hashToKV
         }
 
 {-| Create a `HashDict` by removing a key/value pair from another `HashDict`.
