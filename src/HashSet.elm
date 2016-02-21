@@ -1,7 +1,7 @@
 module HashSet
     ( HashSet
     , empty, singleton, fromSet, insert, remove
-    , isEmpty, member
+    , isEmpty, member, size
     , union, intersect, diff
     , toList, fromList
     , map, map', foldl, foldr, filter, partition
@@ -15,7 +15,7 @@ module HashSet
 @docs empty, singleton, fromSet, insert, remove
 
 # Query
-@docs isEmpty, member
+@docs isEmpty, member, size
 
 # Combine
 @docs union, intersect, diff
@@ -130,6 +130,16 @@ Usage: `member elem hset`
 member : e -> HashSet e comparable -> Bool
 member elem hset =
     D.member (hset.hasher elem) hset.hashToElem
+
+{-| Determine the size of a `HashSet` - the number of elements it contains.
+
+Usage: `size hset`
+
+- `hset`: the `HashSet`
+-}
+size : HashSet e comparable -> Int
+size hset =
+    D.size hset.hashToElem
 
 -- combine
 

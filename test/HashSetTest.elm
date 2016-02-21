@@ -293,6 +293,7 @@ listsSuite =
         , claimElementInListAfterInsert
         , claimElementNotInListAfterRemove
         , claimFromListToListIsSortedList
+        , claimToListLengthIsSize
         ]
 
 claimEmptyHasNoElements : C.Claim
@@ -343,6 +344,17 @@ claimFromListToListIsSortedList =
         (\list -> U.unique list |> L.sortBy U.hashBool)
     `C.for`
         I.list I.bool
+
+claimToListLengthIsSize : C.Claim
+claimToListLengthIsSize =
+    C.claim
+        "toList produces a List whose length is the HashSet's size"
+    `C.that`
+        (\hset -> HS.toList hset |> L.length)
+    `C.is`
+        (\hset -> HS.size hset)
+     `C.for`
+        testHashSetInvestigator
 
 -- ==== transform ====
 
