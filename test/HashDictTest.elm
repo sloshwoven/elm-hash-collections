@@ -405,6 +405,7 @@ listsSuite =
         , claimValueInValueListAfterInsert
         , claimValueInValueListAfterUpdateToJust
         , claimToListIsKeysZippedWithValues
+        , claimToListLengthIsSize
         , claimFromListToListIsSortedAssocList
         ]
 
@@ -501,6 +502,17 @@ claimToListIsKeysZippedWithValues =
         (\hdict -> HD.toList hdict)
     `C.is`
         (\hdict -> L.map2 (,) (HD.keys hdict) (HD.values hdict))
+    `C.for`
+        testHashDictInvestigator
+
+claimToListLengthIsSize : C.Claim
+claimToListLengthIsSize =
+    C.claim
+        "toList produces a List whose length is the HashDict's size"
+    `C.that`
+        (\hdict -> HD.toList hdict |> L.length)
+    `C.is`
+        (\hdict -> HD.size hdict)
     `C.for`
         testHashDictInvestigator
 

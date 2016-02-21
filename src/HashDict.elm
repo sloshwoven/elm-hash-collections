@@ -1,7 +1,7 @@
 module HashDict
     ( HashDict
     , empty, singleton, insert, update, remove
-    , isEmpty, member, get
+    , isEmpty, member, get, size
     , union, intersect, diff
     , keys, values , toList, fromList
     , map, foldl, foldr, filter, partition
@@ -15,7 +15,7 @@ module HashDict
 @docs empty, singleton, insert, update, remove
 
 # Query
-@docs isEmpty, member, get
+@docs isEmpty, member, get, size
 
 # Combine
 @docs union, intersect, diff
@@ -168,6 +168,16 @@ Usage: `get k hdict`
 get : k -> HashDict k comparable v -> Maybe v
 get k hdict =
     D.get (hdict.hasher k) hdict.hashToKV |> M.map snd
+
+{-| Get the size of a `HashDict` - the number of key/value pairs.
+
+Usage: `size hdict`
+
+- `hdict`: the `HashDict`
+-}
+size : HashDict k comparable v -> Int
+size hdict =
+    D.size hdict.hashToKV
 
 -- combine
 
