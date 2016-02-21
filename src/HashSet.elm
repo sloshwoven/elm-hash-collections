@@ -93,7 +93,7 @@ Usage: `insert elem hset`
 insert : e -> HashSet e comparable -> HashSet e comparable
 insert elem hset =
     { hset |
-        hashToElem <- D.insert (hset.hasher elem) elem hset.hashToElem
+        hashToElem = D.insert (hset.hasher elem) elem hset.hashToElem
     }
 
 {-| Create a `HashSet` by removing an element from another `HashSet`.
@@ -106,7 +106,7 @@ Usage: `remove elem hset`
 remove : e -> HashSet e comparable -> HashSet e comparable
 remove elem hset =
     { hset |
-        hashToElem <- D.remove (hset.hasher elem) hset.hashToElem
+        hashToElem = D.remove (hset.hasher elem) hset.hashToElem
     }
 
 -- query
@@ -153,7 +153,7 @@ Example:
 union : HashSet e comparable -> HashSet e comparable -> HashSet e comparable
 union hset1 hset2 =
     { hset1 |
-        hashToElem <- D.union hset1.hashToElem hset2.hashToElem
+        hashToElem = D.union hset1.hashToElem hset2.hashToElem
     }
 
 {-| Create a `HashSet` as the intersection of two other `HashSet`s. The new
@@ -176,7 +176,7 @@ Example:
 intersect : HashSet e comparable -> HashSet e comparable -> HashSet e comparable
 intersect hset1 hset2 =
     { hset1 |
-        hashToElem <- D.intersect hset1.hashToElem hset2.hashToElem
+        hashToElem = D.intersect hset1.hashToElem hset2.hashToElem
     }
 
 {-| Create a `HashSet` as the difference of two other `HashSet`s. The new
@@ -199,7 +199,7 @@ Example:
 diff : HashSet e comparable -> HashSet e comparable -> HashSet e comparable
 diff hset1 hset2 =
     { hset1 |
-        hashToElem <- D.diff hset1.hashToElem hset2.hashToElem
+        hashToElem = D.diff hset1.hashToElem hset2.hashToElem
     }
 
 -- lists
@@ -259,7 +259,7 @@ Usage: `map' f hset`
 Example:
 
     people = HS.fromList .id [{id = 1, name = "Alice"}, {id = 2, name = "Bob"}]
-    HS.map (\p -> {p | name <- toUpper p.name}) people
+    HS.map (\p -> {p | name = toUpper p.name}) people
 -}
 map' : (e -> e) -> HashSet e comparable -> HashSet e comparable
 map' f hset =
@@ -337,6 +337,6 @@ partition pred hset =
     let pred' k v = pred v
         parts = D.partition pred' hset.hashToElem
     in
-        ( { hset | hashToElem <- fst parts }
-        , { hset | hashToElem <- snd parts }
+        ( { hset | hashToElem = fst parts }
+        , { hset | hashToElem = snd parts }
         )

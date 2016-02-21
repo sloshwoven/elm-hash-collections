@@ -4,6 +4,7 @@ import Check as C
 import Check.Investigator as I
 import Hasher as H
 import HashSet as HS
+import Lazy.List as LL
 import List as L
 import Random as R
 import Random.Bool as RB
@@ -512,13 +513,13 @@ hashSetGenerator hasher elemGenerator =
     |> RE.map (HS.fromList hasher)
 
 -- the arguments to this function don't obviously look like they match the signature,
--- but keep in mind that Shrinker is a type alias for a -> List a
+-- but keep in mind that Shrinker is a type alias for a -> LazyList a
 hashSetShrinker : S.Shrinker e -> S.Shrinker (HS.HashSet e comparable)
 hashSetShrinker elemShrinker hset =
     let removeElem e list =
             (HS.remove e hset) :: list
         shrinkElem e list =
-            let smallerElems = elemShrinker e
+            let smallerElems = elemShrinker e |> LL.toList
             in case smallerElems of
                 [] -> list
                 smallerElem :: rest -> (HS.remove e hset |> HS.insert smallerElem) :: list
@@ -526,8 +527,9 @@ hashSetShrinker elemShrinker hset =
         (HS.foldl removeElem [] hset)
         ++
         (HS.foldl shrinkElem [] hset)
+        |> LL.fromList
 
-claimHasherFromFirst : String -> (HS.HashSet Bool comparable -> HS.HashSet Bool comparable -> HS.HashSet Bool comparable) -> C.Claim
+claimHasherFromFirst : String -> (HS.HashSet Bool Int -> HS.HashSet Bool Int -> HS.HashSet Bool Int) -> C.Claim
 claimHasherFromFirst name combiner =
     C.claim
         (name ++ " hasher comes from the first HashSet")

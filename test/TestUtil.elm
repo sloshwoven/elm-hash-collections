@@ -11,6 +11,7 @@ module TestUtil
 
 import Check.Investigator as I
 import Hasher as H
+import Lazy.List as LL
 import List as L
 import Random as R
 import Random.Extra as RE
@@ -43,10 +44,6 @@ prependString : e -> List String -> List String
 prependString e list =
     (toString e) :: list
 
-isEven : number -> Bool
-isEven n =
-    n % 2 == 0
-
 distinctPairInvestigator : I.Investigator a -> I.Investigator (a, a)
 distinctPairInvestigator inv =
     let generator =
@@ -54,6 +51,10 @@ distinctPairInvestigator inv =
         shrinker =
             S.tuple (inv.shrinker, inv.shrinker)
     in I.investigator generator shrinker
+
+isEven : Int -> Bool
+isEven n =
+    n % 2 == 0
 
 distinctPairOf : R.Generator a -> R.Generator (a, a)
 distinctPairOf gen =
@@ -67,4 +68,4 @@ intSetInvestigator =
 setShrinker : S.Shrinker (Set.Set comparable)
 setShrinker s =
     let without e = Set.remove e s
-    in Set.toList s |> L.map without
+    in Set.toList s |> L.map without |> LL.fromList

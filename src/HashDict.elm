@@ -88,7 +88,7 @@ Usage: `insert k v hdict`
 insert : k -> v -> HashDict k comparable v -> HashDict k comparable v
 insert k v hdict =
     { hdict |
-        hashToKV <- D.insert (hdict.hasher k) (k, v) hdict.hashToKV
+        hashToKV = D.insert (hdict.hasher k) (k, v) hdict.hashToKV
     }
 
 {-| Create a `HashDict` by updating a key/value pair of another `HashDict`.
@@ -121,7 +121,7 @@ update k up hdict =
         M.map snd mkv |> up |> M.map (\v -> (k, v))
     in
         { hdict |
-            hashToKV <- D.update (hdict.hasher k) up' hdict.hashToKV
+            hashToKV = D.update (hdict.hasher k) up' hdict.hashToKV
         }
 
 {-| Create a `HashDict` by removing a key/value pair from another `HashDict`.
@@ -134,7 +134,7 @@ Usage: `remove k hdict`
 remove : k -> HashDict k comparable v -> HashDict k comparable v
 remove k hdict =
     { hdict |
-        hashToKV <- D.remove (hdict.hasher k) hdict.hashToKV
+        hashToKV = D.remove (hdict.hasher k) hdict.hashToKV
     }
 
 -- query
@@ -193,7 +193,7 @@ Example:
 union : HashDict k comparable v -> HashDict k comparable v -> HashDict k comparable v
 union hdict1 hdict2 =
     { hdict1 |
-        hashToKV <- D.union hdict1.hashToKV hdict2.hashToKV
+        hashToKV = D.union hdict1.hashToKV hdict2.hashToKV
     }
 
 {-| Create a `HashDict` as the intersection of two other `HashDict`s. The new
@@ -216,7 +216,7 @@ Example:
 intersect : HashDict k comparable v -> HashDict k comparable v -> HashDict k comparable v
 intersect hdict1 hdict2 =
     { hdict1 |
-        hashToKV <- D.intersect hdict1.hashToKV hdict2.hashToKV
+        hashToKV = D.intersect hdict1.hashToKV hdict2.hashToKV
     }
 
 {-| Create a `HashDict` as the difference of two other `HashDict`s. The new
@@ -239,7 +239,7 @@ Example:
 diff : HashDict k comparable v -> HashDict k comparable v -> HashDict k comparable v
 diff hdict1 hdict2 =
     { hdict1 |
-        hashToKV <- D.diff hdict1.hashToKV hdict2.hashToKV
+        hashToKV = D.diff hdict1.hashToKV hdict2.hashToKV
     }
 
 -- lists
@@ -315,7 +315,7 @@ map f hdict =
         in (k, f k (snd kv))
     in
         { hdict |
-            hashToKV <- D.map applyF hdict.hashToKV
+            hashToKV = D.map applyF hdict.hashToKV
         }
 
 {-| Left fold over a `HashDict` to combine its key/values pairs into one result.
@@ -395,7 +395,7 @@ filter pred hdict =
         pred (fst kv) (snd kv)
     in
         { hdict |
-            hashToKV <- D.filter pred' hdict.hashToKV
+            hashToKV = D.filter pred' hdict.hashToKV
         }
 
 {-| Partition a `HashDict` in two: one whose key/value pairs meet a predicate,
@@ -420,6 +420,6 @@ partition pred hdict =
     let pred' hash kv = pred (fst kv) (snd kv)
         parts = D.partition pred' hdict.hashToKV
     in
-        ( { hdict | hashToKV <- fst parts }
-        , { hdict | hashToKV <- snd parts }
+        ( { hdict | hashToKV = fst parts }
+        , { hdict | hashToKV = snd parts }
         )

@@ -4,6 +4,7 @@ import Check as C
 import Check.Investigator as I
 import Hasher as H
 import HashDict as HD
+import Lazy.List as LL
 import List as L
 import Random as R
 import Random.Bool as RB
@@ -649,7 +650,7 @@ claimPartitionTrueLeftFalseRight =
 
 -- ==== helpers ====
 
-valueIsEven : k -> number -> Bool
+valueIsEven : k -> Int -> Bool
 valueIsEven k v =
     U.isEven v
 
@@ -700,18 +701,18 @@ hashDictGenerator hasher keyGenerator valueGenerator =
     |> RE.map (HD.fromList hasher)
 
 -- the arguments to this function don't obviously look like they match the signature,
--- but keep in mind that Shrinker is a type alias for a -> List a
+-- but keep in mind that Shrinker is a type alias for a -> LazyList a
 hashDictShrinker : S.Shrinker k -> S.Shrinker v -> S.Shrinker (HD.HashDict k comparable v)
 hashDictShrinker keyShrinker valueShrinker hdict =
     let removeKey k v list =
             (HD.remove k hdict) :: list
         shrinkKey k v list =
-            let smallerKeys = keyShrinker k
+            let smallerKeys = keyShrinker k |> LL.toList
             in case smallerKeys of
                 [] -> list
                 smallerKey :: rest -> (HD.remove k hdict |> HD.insert smallerKey v) :: list
         shrinkValue k v list =
-            let smallerValues = valueShrinker v
+            let smallerValues = valueShrinker v |> LL.toList
             in case smallerValues of
                 [] -> list
                 smallerValue :: rest -> (HD.insert k smallerValue hdict) :: list
@@ -721,8 +722,9 @@ hashDictShrinker keyShrinker valueShrinker hdict =
         (HD.foldl shrinkKey [] hdict)
         ++
         (HD.foldl shrinkValue [] hdict)
+        |> LL.fromList
 
-claimHasherFromFirst : String -> (HD.HashDict Bool comparable Int -> HD.HashDict Bool comparable Int -> HD.HashDict Bool comparable Int) -> C.Claim
+claimHasherFromFirst : String -> (HD.HashDict Bool Int Int -> HD.HashDict Bool Int Int -> HD.HashDict Bool Int Int) -> C.Claim
 claimHasherFromFirst name combiner =
     C.claim
         (name ++ " hasher comes from the first HashDict")
