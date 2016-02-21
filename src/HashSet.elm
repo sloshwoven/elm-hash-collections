@@ -2,10 +2,9 @@ module HashSet
     ( HashSet
     , empty, singleton, fromSet, insert, remove
     , isEmpty, member
-    , foldl, foldr, map, map'
-    , filter, partition
     , union, intersect, diff
     , toList, fromList
+    , map, map', foldl, foldr, filter, partition
     ) where
 
 {-|

@@ -1,13 +1,10 @@
 module HashDict
     ( HashDict
-    , empty, singleton, insert, update
-    , isEmpty, get, remove, member
-    , filter
-    , partition
-    , foldl, foldr, map
+    , empty, singleton, insert, update, remove
+    , isEmpty, member, get
     , union, intersect, diff
-    , keys, values
-    , toList, fromList
+    , keys, values , toList, fromList
+    , map, foldl, foldr, filter, partition
     ) where
 
 {-|
