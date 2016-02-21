@@ -30,19 +30,22 @@ module HashSet
 import Dict as D
 import Hasher as H
 import List as L
+import ListSet as LS
+import Maybe as M
 import Set as S
+import Util as U
 
 {-| A collection of elements without order or duplicates.
 
 - `e`: element type
 - `comparable`: hash type
 
-- `hasher`: a function that turns elements into unique `comparable` values
+- `hasher`: a function that turns elements into `comparable` values
 - `hashToElem`: a `Dict` of hashes to elements
 -}
 type alias HashSet e comparable =
     { hasher     : H.Hasher e comparable
-    , hashToElem : D.Dict comparable e
+    , hashToElem : D.Dict comparable (LS.ListSet e)
     }
 
 -- build
@@ -51,7 +54,7 @@ type alias HashSet e comparable =
 
 Usage: `empty hasher`
 
-- `hasher`: a function that turns elements into unique `comparable` values
+- `hasher`: a function that turns elements into `comparable` values
 -}
 empty : H.Hasher e comparable -> HashSet e comparable
 empty hasher =
@@ -63,13 +66,13 @@ empty hasher =
 
 Usage: `singleton hasher elem`
 
-- `hasher`: a function that turns elements into unique `comparable` values
+- `hasher`: a function that turns elements into `comparable` values
 - `elem`: an element
 -}
 singleton : H.Hasher e comparable -> e -> HashSet e comparable
 singleton hasher elem =
     { hasher     = hasher
-    , hashToElem = D.singleton (hasher elem) elem
+    , hashToElem = D.singleton (hasher elem) (LS.singleton elem)
     }
 
 {-| Create a `HashSet` from a `Set`, using `identity` as the hasher.
@@ -91,8 +94,12 @@ Usage: `insert elem hset`
 -}
 insert : e -> HashSet e comparable -> HashSet e comparable
 insert elem hset =
-    { hset |
-        hashToElem = D.insert (hset.hasher elem) elem hset.hashToElem
+    let up mels =
+        M.withDefault LS.empty mels
+        |> LS.insert elem
+        |> Just
+    in { hset |
+        hashToElem = D.update (hset.hasher elem) up hset.hashToElem
     }
 
 {-| Create a `HashSet` by removing an element from another `HashSet`.
@@ -131,6 +138,9 @@ member : e -> HashSet e comparable -> Bool
 member elem hset =
     D.member (hset.hasher elem) hset.hashToElem
 
+memberOf : HashSet e comparable -> e -> Bool
+memberOf = flip member
+
 {-| Determine the size of a `HashSet` - the number of elements it contains.
 
 Usage: `size hset`
@@ -139,7 +149,9 @@ Usage: `size hset`
 -}
 size : HashSet e comparable -> Int
 size hset =
-    D.size hset.hashToElem
+    let up hash els acc =
+        acc + LS.size els
+    in D.foldl up 0 hset.hashToElem
 
 -- combine
 
@@ -207,9 +219,7 @@ Example:
 -}
 diff : HashSet e comparable -> HashSet e comparable -> HashSet e comparable
 diff hset1 hset2 =
-    { hset1 |
-        hashToElem = D.diff hset1.hashToElem hset2.hashToElem
-    }
+    filter (U.notF <| memberOf hset2) hset1
 
 -- lists
 
@@ -222,21 +232,18 @@ Usage: `toList hset`
 toList : HashSet e comparable -> List e
 toList hset =
     D.values hset.hashToElem
+    |> L.concatMap LS.toList
 
 {-| Create a `HashSet` from a `List` of elements.
 
 Usage: `fromList hasher elems`
 
-- `hasher`: a function that turns elements into unique `comparable` values
+- `hasher`: a function that turns elements into `comparable` values
 - `elems`: elements to include
 -}
 fromList : H.Hasher e comparable -> List e -> HashSet e comparable
 fromList hasher elems =
-    let toPair elem = (hasher elem, elem)
-    in
-        { hasher     = hasher
-        , hashToElem = D.fromList <| L.map toPair elems
-        }
+    L.foldl insert (empty hasher) elems
 
 -- transform
 
@@ -255,7 +262,9 @@ Example:
 -}
 map : (e1 -> e2) -> H.Hasher e2 comparable2 -> HashSet e1 comparable1 -> HashSet e2 comparable2
 map f hasher hset =
-    fromList hasher (L.map f <| D.values hset.hashToElem)
+    let up elem acc =
+        insert (f elem) acc
+    in foldl up (empty hasher) hset
 
 {-| The same as `map`, but the output element type is the same as the
 input element type, and the hasher of the input is reused.
@@ -291,7 +300,8 @@ Example:
 -}
 foldl : (e -> r -> r) -> r -> HashSet e comparable -> r
 foldl update acc hset =
-    L.foldl update acc <| D.values hset.hashToElem
+    toList hset
+    |> L.foldl update acc
 
 {-| Right fold over a `HashSet` to combine its elements into one result.
 
@@ -310,7 +320,8 @@ Example:
 -}
 foldr : (e -> r -> r) -> r -> HashSet e comparable -> r
 foldr update acc hset =
-    L.foldr update acc <| D.values hset.hashToElem
+    toList hset
+    |> L.foldr update acc
 
 {-| Filter a `HashSet` to a new `HashSet` whose elements match a predicate.
 
@@ -326,7 +337,13 @@ Example:
 -}
 filter : (e -> Bool) -> HashSet e comparable -> HashSet e comparable
 filter pred hset =
-    fromList hset.hasher (L.filter pred <| D.values hset.hashToElem)
+    let f hash els =
+        LS.toList els
+        |> L.filter pred
+        |> U.listToMaybe
+    in { hset |
+        hashToElem = U.dictFilterMap f hset.hashToElem
+    }
 
 {-| Partition a `HashSet` in two: one whose elements meet a predicate, and one
 whose elements don't.
@@ -343,9 +360,8 @@ Example:
 -}
 partition : (e -> Bool) -> HashSet e comparable -> (HashSet e comparable, HashSet e comparable)
 partition pred hset =
-    let pred' k v = pred v
-        parts = D.partition pred' hset.hashToElem
-    in
-        ( { hset | hashToElem = fst parts }
-        , { hset | hashToElem = snd parts }
-        )
+    let up e (left, right) =
+        if pred e
+        then (insert e left, right)
+        else (left, insert e right)
+    in foldl up (empty hset.hasher, empty hset.hasher) hset
