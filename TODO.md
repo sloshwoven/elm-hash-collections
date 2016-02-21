@@ -1,4 +1,3 @@
 # TODO
 
-1. Complete docs.
-2. Publish package.
+1. Publish package.
