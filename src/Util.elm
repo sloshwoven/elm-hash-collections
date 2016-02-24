@@ -1,7 +1,12 @@
 module Util
     ( notF
     , listToMaybe
+    , maybeToBool
+    , dictValMapSum
     , dictFilterMap
+    , fstEq
+    , mapPair
+    , mapBothSnd
     ) where
 
 import Dict as D
@@ -16,6 +21,18 @@ listToMaybe list =
         [] -> Nothing
         _ -> Just list
 
+maybeToBool : Maybe a -> Bool
+maybeToBool m =
+    case m of
+        Nothing -> False
+        Just _ -> True
+
+dictValMapSum : (v -> number) -> D.Dict comparable v -> number
+dictValMapSum f dict =
+    let up k v sum =
+        sum + f v
+    in D.foldl up 0 dict
+
 dictFilterMap : (comparable -> v1 -> Maybe v2) -> D.Dict comparable v1 -> D.Dict comparable v2
 dictFilterMap f dict =
     let up k v acc =
@@ -23,3 +40,15 @@ dictFilterMap f dict =
             Nothing -> acc
             Just res -> D.insert k res acc
     in D.foldl up D.empty dict
+
+fstEq : a -> (a, b) -> Bool
+fstEq x (l, _) =
+    x == l
+
+mapPair : (a -> b -> c) -> (a, b) -> c
+mapPair f (l, r) =
+    f l r
+
+mapBothSnd : (a -> b -> c) -> (a, b) -> (a, c)
+mapBothSnd f (l, r) =
+    (l, f l r)

@@ -30,7 +30,9 @@ module HashDict
 import Dict as D
 import Hasher as H
 import List as L
+import ListSet as LS
 import Maybe as M
+import Util as U
 
 {-| A dictionary mapping keys to values.
 
@@ -43,7 +45,7 @@ import Maybe as M
 -}
 type alias HashDict k comparable v =
     { hasher   : H.Hasher k comparable
-    , hashToKV : D.Dict comparable (k, v)
+    , hashToKV : D.Dict comparable (LS.ListSet (k, v))
     }
 
 -- build
@@ -70,8 +72,8 @@ Usage: `singleton hasher k v`
 -}
 singleton : H.Hasher k comparable -> k -> v -> HashDict k comparable v
 singleton hasher k v =
-    { hasher   = hasher 
-    , hashToKV = D.singleton (hasher k) (k, v)
+    { hasher   = hasher
+    , hashToKV = D.singleton (hasher k) <| LS.singleton (k, v)
     }
 
 {-| Create a `HashDict` by adding a key/value pair to another `HashDict`.
@@ -84,9 +86,7 @@ Usage: `insert k v hdict`
 -}
 insert : k -> v -> HashDict k comparable v -> HashDict k comparable v
 insert k v hdict =
-    { hdict |
-        hashToKV = D.insert (hdict.hasher k) (k, v) hdict.hashToKV
-    }
+    update k (always <| Just v) hdict
 
 {-| Create a `HashDict` by updating a key/value pair of another `HashDict`.
 
@@ -114,8 +114,22 @@ Example:
 -}
 update : k -> (Maybe v -> Maybe v) -> HashDict k comparable v -> HashDict k comparable v
 update k up hdict =
-    let up' mkv =
-        M.map snd mkv |> up |> M.map (\v -> (k, v))
+    let up' mkvs =
+        case mkvs of
+            Nothing ->
+                up Nothing
+                |> M.map (\v -> LS.singleton (k, v))
+            Just kvs ->
+                LS.toList kvs
+                |> L.filterMap (\(k', v) ->
+                    if (k' == k)
+                    then
+                        up (Just v)
+                        |> M.map (\v' -> (k', v'))
+                    else Just (k', v)
+                )
+                |> U.listToMaybe
+                |> M.map LS.fromList
     in
         { hdict |
             hashToKV = D.update (hdict.hasher k) up' hdict.hashToKV
@@ -130,9 +144,7 @@ Usage: `remove k hdict`
 -}
 remove : k -> HashDict k comparable v -> HashDict k comparable v
 remove k hdict =
-    { hdict |
-        hashToKV = D.remove (hdict.hasher k) hdict.hashToKV
-    }
+    update k (always Nothing) hdict
 
 -- query
 
@@ -155,7 +167,7 @@ Usage: `member k hdict`
 -}
 member : k -> HashDict k comparable v -> Bool
 member k hdict =
-    D.member (hdict.hasher k) hdict.hashToKV
+    get k hdict |> U.maybeToBool
 
 {-| Retrieve a value from a `HashDict`, or `Nothing` if the key is not a
 member.
@@ -167,7 +179,14 @@ Usage: `get k hdict`
 -}
 get : k -> HashDict k comparable v -> Maybe v
 get k hdict =
-    D.get (hdict.hasher k) hdict.hashToKV |> M.map snd
+    let match =
+        D.get (hdict.hasher k) hdict.hashToKV
+        |> M.withDefault (LS.empty)
+        |> LS.filter (U.fstEq k)
+        |> LS.toList
+    in case match of
+        [] -> Nothing
+        (k', v) :: _ -> Just v
 
 {-| Get the size of a `HashDict` - the number of key/value pairs.
 
@@ -177,7 +196,7 @@ Usage: `size hdict`
 -}
 size : HashDict k comparable v -> Int
 size hdict =
-    D.size hdict.hashToKV
+    U.dictValMapSum LS.size hdict.hashToKV
 
 -- combine
 
@@ -271,7 +290,8 @@ values = mapKVs snd
 
 mapKVs : ((k, v) -> r) -> HashDict k comparable v -> List r
 mapKVs f hdict =
-    D.values hdict.hashToKV |> L.map f
+    D.values hdict.hashToKV
+    |> L.concatMap (LS.map f)
 
 {-| Convert a `HashDict` to a `List` of key/value pairs.
 
@@ -282,6 +302,7 @@ Usage: `toList hdict`
 toList : HashDict k comparable v -> List (k, v)
 toList hdict =
     D.values hdict.hashToKV
+    |> L.concat
 
 {-| Create a `HashDict` from a `List` of key/value pairs.
 
@@ -292,12 +313,9 @@ Usage: `fromList hasher pairs`
 -}
 fromList : H.Hasher k comparable -> List (k, v) -> HashDict k comparable v
 fromList hasher pairs =
-    let toHashPair kv =
-        (hasher <| fst kv, kv)
-    in
-        { hasher   = hasher
-        , hashToKV = D.fromList <| L.map toHashPair pairs
-        }
+    let add (k, v) hdict =
+        insert k v hdict
+    in L.foldl add (empty hasher) pairs
 
 -- transform
 
@@ -317,9 +335,8 @@ Example:
 -}
 map : (k -> v -> v') -> HashDict k comparable v -> HashDict k comparable v'
 map f hdict =
-    let applyF hash kv =
-        let k = fst kv
-        in (k, f k (snd kv))
+    let applyF hash kvs =
+        LS.map (U.mapBothSnd f) kvs
     in
         { hdict |
             hashToKV = D.map applyF hdict.hashToKV
@@ -349,8 +366,10 @@ Example:
 -}
 foldl : (k -> v -> r -> r) -> r -> HashDict k comparable v -> r
 foldl update acc hdict =
-    let update' hash kv acc' =
-        update (fst kv) (snd kv) acc'
+    let update' hash kvs acc' =
+        let update'' (k, v) acc'' =
+            update k v acc''
+        in LS.foldl update'' acc' kvs
     in D.foldl update' acc hdict.hashToKV
 
 {-| Right fold over a `HashDict` to combine its key/values pairs into one result.
@@ -377,8 +396,10 @@ Example:
 -}
 foldr : (k -> v -> r -> r) -> r -> HashDict k comparable v -> r
 foldr update acc hdict =
-    let update' hash kv acc' =
-        update (fst kv) (snd kv) acc'
+    let update' hash kvs acc' =
+        let update'' (k, v) acc'' =
+            update k v acc''
+        in LS.foldr update'' acc' kvs
     in D.foldr update' acc hdict.hashToKV
 
 {-| Filter a `HashDict` to a new `HashDict` whose key/value pairs match a predicate.
@@ -398,11 +419,12 @@ Example:
 -}
 filter : (k -> v -> Bool) -> HashDict k comparable v -> HashDict k comparable v
 filter pred hdict =
-    let pred' hash kv =
-        pred (fst kv) (snd kv)
+    let pred' hash kvs =
+        LS.filter (U.mapPair pred) kvs
+        |> U.listToMaybe
     in
         { hdict |
-            hashToKV = D.filter pred' hdict.hashToKV
+            hashToKV = U.dictFilterMap pred' hdict.hashToKV
         }
 
 {-| Partition a `HashDict` in two: one whose key/value pairs meet a predicate,
@@ -424,9 +446,8 @@ Example:
 -}
 partition : (k -> v -> Bool) -> HashDict k comparable v -> (HashDict k comparable v, HashDict k comparable v)
 partition pred hdict =
-    let pred' hash kv = pred (fst kv) (snd kv)
-        parts = D.partition pred' hdict.hashToKV
-    in
-        ( { hdict | hashToKV = fst parts }
-        , { hdict | hashToKV = snd parts }
-        )
+    let up k v (left, right) =
+        if pred k v
+        then (insert k v left, right)
+        else (left, insert k v right)
+    in foldl up (empty hdict.hasher, empty hdict.hasher) hdict
