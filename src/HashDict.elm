@@ -45,7 +45,7 @@ import Util as U
 -}
 type alias HashDict k comparable v =
     { hasher   : H.Hasher k comparable
-    , hashToKV : D.Dict comparable (LS.ListSet (k, v))
+    , hashToKV : D.Dict comparable (List (k, v))
     }
 
 -- build
@@ -73,7 +73,7 @@ Usage: `singleton hasher k v`
 singleton : H.Hasher k comparable -> k -> v -> HashDict k comparable v
 singleton hasher k v =
     { hasher   = hasher
-    , hashToKV = D.singleton (hasher k) <| LS.singleton (k, v)
+    , hashToKV = D.singleton (hasher k) [(k, v)]
     }
 
 {-| Create a `HashDict` by adding a key/value pair to another `HashDict`.
@@ -118,18 +118,16 @@ update k up hdict =
         case mkvs of
             Nothing ->
                 up Nothing
-                |> M.map (\v -> LS.singleton (k, v))
+                |> M.map (\v -> [(k, v)])
             Just kvs ->
-                LS.toList kvs
-                |> L.filterMap (\(k', v) ->
+                L.filterMap (\(k', v) ->
                     if (k' == k)
                     then
                         up (Just v)
                         |> M.map (\v' -> (k', v'))
                     else Just (k', v)
-                )
+                ) kvs
                 |> U.listToMaybe
-                |> M.map LS.fromList
     in
         { hdict |
             hashToKV = D.update (hdict.hasher k) up' hdict.hashToKV
@@ -181,9 +179,8 @@ get : k -> HashDict k comparable v -> Maybe v
 get k hdict =
     let match =
         D.get (hdict.hasher k) hdict.hashToKV
-        |> M.withDefault (LS.empty)
-        |> LS.filter (U.fstEq k)
-        |> LS.toList
+        |> M.withDefault []
+        |> L.filter (U.fstEq k)
     in case match of
         [] -> Nothing
         (k', v) :: _ -> Just v
@@ -196,7 +193,7 @@ Usage: `size hdict`
 -}
 size : HashDict k comparable v -> Int
 size hdict =
-    U.dictValMapSum LS.size hdict.hashToKV
+    U.dictValMapSum L.length hdict.hashToKV
 
 -- combine
 
@@ -369,7 +366,7 @@ foldl update acc hdict =
     let update' hash kvs acc' =
         let update'' (k, v) acc'' =
             update k v acc''
-        in LS.foldl update'' acc' kvs
+        in L.foldl update'' acc' kvs
     in D.foldl update' acc hdict.hashToKV
 
 {-| Right fold over a `HashDict` to combine its key/values pairs into one result.
@@ -399,7 +396,7 @@ foldr update acc hdict =
     let update' hash kvs acc' =
         let update'' (k, v) acc'' =
             update k v acc''
-        in LS.foldr update'' acc' kvs
+        in L.foldr update'' acc' kvs
     in D.foldr update' acc hdict.hashToKV
 
 {-| Filter a `HashDict` to a new `HashDict` whose key/value pairs match a predicate.
@@ -420,7 +417,7 @@ Example:
 filter : (k -> v -> Bool) -> HashDict k comparable v -> HashDict k comparable v
 filter pred hdict =
     let pred' hash kvs =
-        LS.filter (U.mapPair pred) kvs
+        L.filter (U.mapPair pred) kvs
         |> U.listToMaybe
     in
         { hdict |

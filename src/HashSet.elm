@@ -45,7 +45,7 @@ import Util as U
 -}
 type alias HashSet e comparable =
     { hasher     : H.Hasher e comparable
-    , hashToElem : D.Dict comparable (LS.ListSet e)
+    , hashToElem : D.Dict comparable (List e)
     }
 
 -- build
@@ -72,7 +72,7 @@ Usage: `singleton hasher elem`
 singleton : H.Hasher e comparable -> e -> HashSet e comparable
 singleton hasher elem =
     { hasher     = hasher
-    , hashToElem = D.singleton (hasher elem) (LS.singleton elem)
+    , hashToElem = D.singleton (hasher elem) [elem]
     }
 
 {-| Create a `HashSet` from a `Set`, using `identity` as the hasher.
@@ -95,7 +95,7 @@ Usage: `insert elem hset`
 insert : e -> HashSet e comparable -> HashSet e comparable
 insert elem hset =
     let up mels =
-        M.withDefault LS.empty mels
+        M.withDefault [] mels
         |> LS.insert elem
         |> Just
     in { hset |
@@ -149,7 +149,7 @@ Usage: `size hset`
 -}
 size : HashSet e comparable -> Int
 size hset =
-    U.dictValMapSum LS.size hset.hashToElem
+    U.dictValMapSum L.length hset.hashToElem
 
 -- combine
 
@@ -230,7 +230,7 @@ Usage: `toList hset`
 toList : HashSet e comparable -> List e
 toList hset =
     D.values hset.hashToElem
-    |> L.concatMap LS.toList
+    |> L.concat
 
 {-| Create a `HashSet` from a `List` of elements.
 
@@ -336,8 +336,7 @@ Example:
 filter : (e -> Bool) -> HashSet e comparable -> HashSet e comparable
 filter pred hset =
     let f hash els =
-        LS.toList els
-        |> L.filter pred
+        L.filter pred els
         |> U.listToMaybe
     in { hset |
         hashToElem = U.dictFilterMap f hset.hashToElem
