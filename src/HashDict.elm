@@ -40,7 +40,7 @@ import Util as U
 - `comparable`: key hash type
 - `v`: value type
 
-- `hasher`: a function that turns keys into unique `comparable` hashes
+- `hasher`: a function that turns keys into `comparable` hashes
 - `hashToKV`: a `Dict` of hashes to values
 -}
 type alias HashDict k comparable v =
@@ -54,7 +54,7 @@ type alias HashDict k comparable v =
 
 Usage: `empty hasher`
 
-- `hasher`: a function that turns keys into unique `comparable` hashes
+- `hasher`: a function that turns keys into `comparable` hashes
 -}
 empty : H.Hasher k comparable -> HashDict k comparable v
 empty hasher =
@@ -66,7 +66,7 @@ empty hasher =
 
 Usage: `singleton hasher k v`
 
-- `hasher`: a function that turns keys into unique `comparable` hashes
+- `hasher`: a function that turns keys into `comparable` hashes
 - `k`: key
 - `v`: value
 -}
@@ -305,7 +305,7 @@ toList hdict =
 
 Usage: `fromList hasher pairs`
 
-- `hasher`: a function that turns keys into unique `comparable` hashes
+- `hasher`: a function that turns keys into `comparable` hashes
 - `pairs`: key/value pairs
 -}
 fromList : H.Hasher k comparable -> List (k, v) -> HashDict k comparable v
