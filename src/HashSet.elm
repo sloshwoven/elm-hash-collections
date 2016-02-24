@@ -149,9 +149,7 @@ Usage: `size hset`
 -}
 size : HashSet e comparable -> Int
 size hset =
-    let up hash els acc =
-        acc + LS.size els
-    in D.foldl up 0 hset.hashToElem
+    U.dictValMapSum LS.size hset.hashToElem
 
 -- combine
 
