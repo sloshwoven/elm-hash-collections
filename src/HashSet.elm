@@ -136,7 +136,9 @@ Usage: `member elem hset`
 -}
 member : e -> HashSet e comparable -> Bool
 member elem hset =
-    D.member (hset.hasher elem) hset.hashToElem
+    D.get (hset.hasher elem) hset.hashToElem
+    |> M.withDefault []
+    |> L.member elem
 
 memberOf : HashSet e comparable -> e -> Bool
 memberOf = flip member
@@ -171,9 +173,9 @@ Example:
 -}
 union : HashSet e comparable -> HashSet e comparable -> HashSet e comparable
 union hset1 hset2 =
-    { hset1 |
-        hashToElem = D.union hset1.hashToElem hset2.hashToElem
-    }
+    let up elem un =
+        insert elem un
+    in foldl up hset1 hset2
 
 {-| Create a `HashSet` as the intersection of two other `HashSet`s. The new
 `HashSet` will use the hasher from the first `HashSet`.
@@ -194,9 +196,9 @@ Example:
 -}
 intersect : HashSet e comparable -> HashSet e comparable -> HashSet e comparable
 intersect hset1 hset2 =
-    { hset1 |
-        hashToElem = D.intersect hset1.hashToElem hset2.hashToElem
-    }
+    let hset2Member elem =
+        member elem hset2
+    in filter hset2Member hset1
 
 {-| Create a `HashSet` as the difference of two other `HashSet`s. The new
 `HashSet` will use the hasher from the first `HashSet`.

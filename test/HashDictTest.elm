@@ -6,13 +6,14 @@ import Hasher as H
 import HashDict as HD
 import Lazy.List as LL
 import List as L
+import Person as P
 import Random as R
 import Random.Bool as RB
 import Random.Extra as RE
 import Random.Int as RI
 import Random.List as RL
 import Shrink as S
-import TestUtil as U
+import TestUtil as TU
 
 hashDictSuite : C.Claim
 hashDictSuite =
@@ -50,7 +51,7 @@ claimEmptyIsEmpty =
     C.claim
         "empty produces a result that is empty"
     `C.true`
-        (\() -> HD.empty U.hashBool |> HD.isEmpty)
+        (\() -> HD.empty P.hash1 |> HD.isEmpty)
     `C.for`
         I.void
 
@@ -59,58 +60,58 @@ claimMemberFromEmptyIsFalse =
     C.claim
         "calling member with an empty HashDict always returns False"
     `C.false`
-        (\k -> HD.empty U.hashBool |> HD.member k)
+        (\k -> HD.empty P.hash1 |> HD.member k)
     `C.for`
-        I.bool
+        TU.personInvestigator
 
 claimGetFromEmptyIsNothing : C.Claim
 claimGetFromEmptyIsNothing =
     C.claim
         "getting from an empty HashDict always returns Nothing"
     `C.that`
-        (\k -> HD.empty U.hashBool |> HD.get k)
+        (\k -> HD.empty P.hash1 |> HD.get k)
     `C.is`
         always Nothing
     `C.for`
-        I.bool
+        TU.personInvestigator
 
 claimSingletonNotEmpty : C.Claim
 claimSingletonNotEmpty =
     C.claim
         "singletons are not empty"
     `C.false`
-        (\(k, v) -> HD.singleton U.hashBool k v |> HD.isEmpty)
+        (\(k, v) -> HD.singleton P.hash1 k v |> HD.isEmpty)
     `C.for`
-        I.tuple (I.bool, I.int)
+        I.tuple (TU.personInvestigator, I.int)
 
 claimSingletonContainsKey : C.Claim
 claimSingletonContainsKey =
     C.claim
         "singletons contain the key they were created with"
     `C.true`
-        (\(k, v) -> HD.singleton U.hashBool k v |> HD.member k)
+        (\(k, v) -> HD.singleton P.hash1 k v |> HD.member k)
     `C.for`
-        I.tuple (I.bool, I.int)
+        I.tuple (TU.personInvestigator, I.int)
 
 claimSingletonContainsValue : C.Claim
 claimSingletonContainsValue =
     C.claim
         "singletons contain the value they were created with"
     `C.that`
-        (\(k, v) -> HD.singleton U.hashBool k v |> HD.get k)
+        (\(k, v) -> HD.singleton P.hash1 k v |> HD.get k)
     `C.is`
         (Just << snd)
     `C.for`
-        I.tuple (I.bool, I.int)
+        I.tuple (TU.personInvestigator, I.int)
 
 claimSingletonDoesNotContainOther : C.Claim
 claimSingletonDoesNotContainOther =
     C.claim
         "singletons do not contain a key other than the one they were created with"
     `C.false`
-        (\((k1, k2), v) -> HD.singleton U.hashBool k1 v |> HD.member k2)
+        (\((k1, k2), v) -> HD.singleton P.hash1 k1 v |> HD.member k2)
     `C.for`
-        I.tuple (U.distinctPairInvestigator I.bool, I.int)
+        I.tuple (TU.distinctPairInvestigator TU.personInvestigator, I.int)
 
 claimInsertMakesNonEmpty : C.Claim
 claimInsertMakesNonEmpty =
@@ -119,7 +120,7 @@ claimInsertMakesNonEmpty =
     `C.false`
         (\(hdict, k, v) -> hdict |> HD.insert k v |> HD.isEmpty)
     `C.for`
-        I.tuple3 (testHashDictInvestigator, I.bool, I.int)
+        I.tuple3 (testHashDictInvestigator, TU.personInvestigator, I.int)
 
 claimKeyPresentAfterInsert : C.Claim
 claimKeyPresentAfterInsert =
@@ -128,7 +129,7 @@ claimKeyPresentAfterInsert =
     `C.true`
         (\(hdict, k, v) -> HD.insert k v hdict |> HD.member k)
     `C.for`
-        I.tuple3 (testHashDictInvestigator, I.bool, I.int)
+        I.tuple3 (testHashDictInvestigator, TU.personInvestigator, I.int)
 
 claimInsertAddsValue : C.Claim
 claimInsertAddsValue =
@@ -139,7 +140,7 @@ claimInsertAddsValue =
     `C.is`
         (\(hdict, k, v) -> Just v)
     `C.for`
-        I.tuple3 (testHashDictInvestigator, I.bool, I.int)
+        I.tuple3 (testHashDictInvestigator, TU.personInvestigator, I.int)
 
 claimKeyNotPresentAfterUpdateToNothing : C.Claim
 claimKeyNotPresentAfterUpdateToNothing =
@@ -148,7 +149,7 @@ claimKeyNotPresentAfterUpdateToNothing =
     `C.false`
         (\(hdict, k) -> HD.update k (always Nothing) hdict |> HD.member k)
     `C.for`
-        I.tuple (testHashDictInvestigator, I.bool)
+        I.tuple (testHashDictInvestigator, TU.personInvestigator)
 
 claimKeyPresentAfterUpdateToJust : C.Claim
 claimKeyPresentAfterUpdateToJust =
@@ -157,7 +158,7 @@ claimKeyPresentAfterUpdateToJust =
     `C.true`
         (\(hdict, k, v) -> HD.update k (always (Just v)) hdict |> HD.member k)
     `C.for`
-        I.tuple3 (testHashDictInvestigator, I.bool, I.int)
+        I.tuple3 (testHashDictInvestigator, TU.personInvestigator, I.int)
 
 claimValuePresentAfterUpdateToJust : C.Claim
 claimValuePresentAfterUpdateToJust =
@@ -168,7 +169,7 @@ claimValuePresentAfterUpdateToJust =
     `C.is`
         (\(hdict, k, v) -> Just v)
     `C.for`
-        I.tuple3 (testHashDictInvestigator, I.bool, I.int)
+        I.tuple3 (testHashDictInvestigator, TU.personInvestigator, I.int)
 
 claimKeyNotPresentAfterRemove : C.Claim
 claimKeyNotPresentAfterRemove =
@@ -177,7 +178,7 @@ claimKeyNotPresentAfterRemove =
     `C.false`
         (\(hdict, k, v) -> HD.insert k v hdict |> HD.remove k |> HD.member k)
     `C.for`
-        I.tuple3 (testHashDictInvestigator, I.bool, I.int)
+        I.tuple3 (testHashDictInvestigator, TU.personInvestigator, I.int)
 
 claimRemoveAllIsEmpty : C.Claim
 claimRemoveAllIsEmpty =
@@ -414,7 +415,7 @@ claimEmptyHasNoKeys =
     C.claim
         "an empty HashDict has no keys"
     `C.true`
-        (\() -> HD.empty U.hashBool |> HD.keys |> L.isEmpty)
+        (\() -> HD.empty P.hash1 |> HD.keys |> L.isEmpty)
     `C.for`
         I.void
 
@@ -423,11 +424,11 @@ claimSingletonHasOneKey =
     C.claim
         "a singleton HashDict has the one key it was created with"
     `C.that`
-        (\(k, v) -> HD.singleton U.hashBool k v |> HD.keys)
+        (\(k, v) -> HD.singleton P.hash1 k v |> HD.keys)
     `C.is`
         (\(k, v) -> [k])
     `C.for`
-        I.tuple (I.bool, I.int)
+        I.tuple (TU.personInvestigator, I.int)
 
 claimKeyInKeyListAfterInsert : C.Claim
 claimKeyInKeyListAfterInsert =
@@ -436,7 +437,7 @@ claimKeyInKeyListAfterInsert =
     `C.true`
         (\(hdict, k, v) -> HD.insert k v hdict |> HD.keys |> L.any ((==) k))
     `C.for`
-        I.tuple3 (testHashDictInvestigator, I.bool, I.int)
+        I.tuple3 (testHashDictInvestigator, TU.personInvestigator, I.int)
 
 claimKeyNotInKeyListAfterUpdateToNothing : C.Claim
 claimKeyNotInKeyListAfterUpdateToNothing =
@@ -445,7 +446,7 @@ claimKeyNotInKeyListAfterUpdateToNothing =
     `C.false`
         (\(hdict, k) -> HD.update k (always Nothing) hdict |> HD.keys |> L.any ((==) k))
     `C.for`
-        I.tuple (testHashDictInvestigator, I.bool)
+        I.tuple (testHashDictInvestigator, TU.personInvestigator)
 
 claimKeyInKeyListAfterUpdateToJust : C.Claim
 claimKeyInKeyListAfterUpdateToJust =
@@ -454,14 +455,14 @@ claimKeyInKeyListAfterUpdateToJust =
     `C.true`
         (\(hdict, k, v) -> HD.update k (always (Just v)) hdict |> HD.keys |> L.any ((==) k))
     `C.for`
-        I.tuple3 (testHashDictInvestigator, I.bool, I.int)
+        I.tuple3 (testHashDictInvestigator, TU.personInvestigator, I.int)
 
 claimEmptyHasNoValues : C.Claim
 claimEmptyHasNoValues =
     C.claim
         "an empty HashDict has no values"
     `C.true`
-        (\() -> HD.empty U.hashBool |> HD.values |> L.isEmpty)
+        (\() -> HD.empty P.hash1 |> HD.values |> L.isEmpty)
     `C.for`
         I.void
 
@@ -470,11 +471,11 @@ claimSingletonHasOneValue =
     C.claim
         "a singleton HashDict has the one value it was created with"
     `C.that`
-        (\(k, v) -> HD.singleton U.hashBool k v |> HD.values)
+        (\(k, v) -> HD.singleton P.hash1 k v |> HD.values)
     `C.is`
         (\(k, v) -> [v])
     `C.for`
-        I.tuple (I.bool, I.int)
+        I.tuple (TU.personInvestigator, I.int)
 
 claimValueInValueListAfterInsert : C.Claim
 claimValueInValueListAfterInsert =
@@ -483,7 +484,7 @@ claimValueInValueListAfterInsert =
     `C.true`
         (\(hdict, k, v) -> HD.insert k v hdict |> HD.values |> L.any ((==) v))
     `C.for`
-        I.tuple3 (testHashDictInvestigator, I.bool, I.int)
+        I.tuple3 (testHashDictInvestigator, TU.personInvestigator, I.int)
 
 claimValueInValueListAfterUpdateToJust : C.Claim
 claimValueInValueListAfterUpdateToJust =
@@ -492,7 +493,7 @@ claimValueInValueListAfterUpdateToJust =
     `C.true`
         (\(hdict, k, v) -> HD.update k (always (Just v)) hdict |> HD.values |> L.any ((==) v))
     `C.for`
-        I.tuple3 (testHashDictInvestigator, I.bool, I.int)
+        I.tuple3 (testHashDictInvestigator, TU.personInvestigator, I.int)
 
 claimToListIsKeysZippedWithValues : C.Claim
 claimToListIsKeysZippedWithValues =
@@ -521,11 +522,11 @@ claimFromListToListIsSortedAssocList =
     C.claim
         "fromList composed with toList produces a sorted association list"
     `C.that`
-        (\list -> HD.fromList U.hashBool list |> HD.toList)
+        (\list -> HD.fromList P.hash1 list |> HD.toList)
     `C.is`
-        (\list -> L.foldr assocAppend [] list |> L.sortBy (U.hashBool << fst))
+        (\list -> L.foldr assocAppend [] list |> L.sortBy (P.hash1 << fst))
     `C.for`
-        I.list (I.tuple (I.bool, I.int))
+        I.list (I.tuple (TU.personInvestigator, I.int))
 
 -- ==== transform ====
 
@@ -553,7 +554,7 @@ claimMapNegateNegatesValue =
     `C.is`
         (\(hdict, k, v) -> Just (negate v))
     `C.for`
-        I.tuple3 (testHashDictInvestigator, I.bool, I.int)
+        I.tuple3 (testHashDictInvestigator, TU.personInvestigator, I.int)
 
 claimMapLeavesKeysUnchanged : C.Claim
 claimMapLeavesKeysUnchanged =
@@ -653,9 +654,9 @@ claimPartitionTrueLeftFalseRight =
         (\hdict ->
             let part = HD.partition valueIsEven hdict
             in
-                ((fst part) |> HD.values |> L.all U.isEven)
+                ((fst part) |> HD.values |> L.all TU.isEven)
                 &&
-                ((snd part) |> HD.values |> U.none U.isEven)
+                ((snd part) |> HD.values |> TU.none TU.isEven)
         )
     `C.for`
         testHashDictInvestigator
@@ -664,9 +665,9 @@ claimPartitionTrueLeftFalseRight =
 
 valueIsEven : k -> Int -> Bool
 valueIsEven k v =
-    U.isEven v
+    TU.isEven v
 
-assocAppend : (Bool, Int) -> List (Bool, Int) -> List (Bool, Int)
+assocAppend : (P.Person, Int) -> List (P.Person, Int) -> List (P.Person, Int)
 assocAppend (k, v) list =
     if assocMember k list
     then list
@@ -690,20 +691,20 @@ appendStrings : k -> v -> String
 appendStrings k v =
     (toString k) ++ ":" ++ (toString v)
 
-testHashDictInvestigator : I.Investigator (HD.HashDict Bool Int Int)
+testHashDictInvestigator : I.Investigator (HD.HashDict P.Person Int Int)
 testHashDictInvestigator =
-    makeTestHashDictInvestigator U.hashBool
+    makeTestHashDictInvestigator P.hash1
 
-altTestHashDictInvestigator : I.Investigator (HD.HashDict Bool Int Int)
+altTestHashDictInvestigator : I.Investigator (HD.HashDict P.Person Int Int)
 altTestHashDictInvestigator =
-    makeTestHashDictInvestigator U.altHashBool
+    makeTestHashDictInvestigator P.hash2
 
-makeTestHashDictInvestigator : H.Hasher Bool comparable -> I.Investigator (HD.HashDict Bool comparable Int)
+makeTestHashDictInvestigator : H.Hasher P.Person comparable -> I.Investigator (HD.HashDict P.Person comparable Int)
 makeTestHashDictInvestigator hasher =
     let generator =
-            hashDictGenerator hasher RB.bool RI.anyInt
+            hashDictGenerator hasher TU.personGenerator RI.anyInt
         shrinker =
-            hashDictShrinker S.bool S.int
+            hashDictShrinker TU.personShrinker S.int
     in I.investigator generator shrinker
 
 hashDictGenerator : H.Hasher k comparable -> R.Generator k -> R.Generator v -> R.Generator (HD.HashDict k comparable v)
@@ -736,7 +737,7 @@ hashDictShrinker keyShrinker valueShrinker hdict =
         (HD.foldl shrinkValue [] hdict)
         |> LL.fromList
 
-claimHasherFromFirst : String -> (HD.HashDict Bool Int Int -> HD.HashDict Bool Int Int -> HD.HashDict Bool Int Int) -> C.Claim
+claimHasherFromFirst : String -> (HD.HashDict P.Person Int Int -> HD.HashDict P.Person Int Int -> HD.HashDict P.Person Int Int) -> C.Claim
 claimHasherFromFirst name combiner =
     C.claim
         (name ++ " hasher comes from the first HashDict")
@@ -745,4 +746,4 @@ claimHasherFromFirst name combiner =
     `C.is`
         (\(hdict1, hdict2, k) -> hdict1.hasher k)
     `C.for`
-        I.tuple3 (testHashDictInvestigator, altTestHashDictInvestigator, I.bool)
+        I.tuple3 (testHashDictInvestigator, altTestHashDictInvestigator, TU.personInvestigator)

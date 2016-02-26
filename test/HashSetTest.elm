@@ -6,13 +6,16 @@ import Hasher as H
 import HashSet as HS
 import Lazy.List as LL
 import List as L
+import ListSet as LS
+import Person as P
 import Random as R
 import Random.Bool as RB
 import Random.Extra as RE
 import Random.List as RL
 import Set
 import Shrink as S
-import TestUtil as U
+import TestUtil as TU
+import Util as U
 
 hashSetSuite : C.Claim
 hashSetSuite =
@@ -45,7 +48,7 @@ claimEmptyIsEmpty =
     C.claim
         "empty produces a result that is empty"
     `C.true`
-        (\() -> HS.empty U.hashBool |> HS.isEmpty)
+        (\() -> HS.empty P.hash1 |> HS.isEmpty)
     `C.for`
         I.void
 
@@ -54,36 +57,36 @@ claimMemberFromEmptyIsFalse =
     C.claim
         "calling member with an empty HashSet always returns False"
     `C.false`
-        (\e -> HS.empty U.hashBool |> HS.member e)
+        (\e -> HS.empty P.hash1 |> HS.member e)
     `C.for`
-        I.bool
+        TU.personInvestigator
 
 claimSingletonNotEmpty : C.Claim
 claimSingletonNotEmpty =
     C.claim
         "singletons are not empty"
     `C.false`
-        (\e -> HS.singleton U.hashBool e |> HS.isEmpty)
+        (\e -> HS.singleton P.hash1 e |> HS.isEmpty)
     `C.for`
-        I.bool
+        TU.personInvestigator
 
 claimSingletonContainsElement : C.Claim
 claimSingletonContainsElement =
     C.claim
         "singletons contain the element they were created with"
     `C.true`
-        (\e -> HS.singleton U.hashBool e |> HS.member e)
+        (\e -> HS.singleton P.hash1 e |> HS.member e)
     `C.for`
-        I.bool
+        TU.personInvestigator
 
 claimSingletonDoesNotContainOther : C.Claim
 claimSingletonDoesNotContainOther =
     C.claim
         "singletons do not contain an element other than the one they were created with"
     `C.false`
-        (\(e1, e2) -> HS.singleton U.hashBool e1 |> HS.member e2)
+        (\(e1, e2) -> HS.singleton P.hash1 e1 |> HS.member e2)
     `C.for`
-        U.distinctPairInvestigator I.bool
+        TU.distinctPairInvestigator TU.personInvestigator
 
 claimFromSetIsToListFromList : C.Claim
 claimFromSetIsToListFromList =
@@ -94,7 +97,7 @@ claimFromSetIsToListFromList =
     `C.is`
         (Set.toList >> HS.fromList identity)
     `C.for`
-        U.intSetInvestigator
+        TU.intSetInvestigator
 
 claimInsertMakesNonEmpty : C.Claim
 claimInsertMakesNonEmpty =
@@ -103,7 +106,7 @@ claimInsertMakesNonEmpty =
     `C.false`
         (\(hset, e) -> HS.insert e hset |> HS.isEmpty)
     `C.for`
-        I.tuple (testHashSetInvestigator, I.bool)
+        I.tuple (testHashSetInvestigator, TU.personInvestigator)
 
 claimElementPresentAfterInsert : C.Claim
 claimElementPresentAfterInsert =
@@ -112,7 +115,7 @@ claimElementPresentAfterInsert =
     `C.true`
         (\(hset, e) -> HS.insert e hset |> HS.member e)
     `C.for`
-        I.tuple (testHashSetInvestigator, I.bool)
+        I.tuple (testHashSetInvestigator, TU.personInvestigator)
 
 claimElementNotPresentAfterRemove : C.Claim
 claimElementNotPresentAfterRemove =
@@ -121,7 +124,7 @@ claimElementNotPresentAfterRemove =
     `C.false`
         (\(hset, e) -> HS.insert e hset |> HS.remove e |> HS.member e)
     `C.for`
-        I.tuple (testHashSetInvestigator, I.bool)
+        I.tuple (testHashSetInvestigator, TU.personInvestigator)
 
 claimRemoveAllIsEmpty : C.Claim
 claimRemoveAllIsEmpty =
@@ -301,7 +304,7 @@ claimEmptyHasNoElements =
     C.claim
         "an empty HashSet converted to a list has no elements"
     `C.true`
-        (\() -> HS.empty U.hashBool |> HS.toList |> L.isEmpty)
+        (\() -> HS.empty P.hash1 |> HS.toList |> L.isEmpty)
     `C.for`
         I.void
 
@@ -310,11 +313,11 @@ claimSingletonHasOneElement =
     C.claim
         "a singleton HashSet converted to a list has only the one element it was created with"
     `C.that`
-        (\e -> HS.singleton U.hashBool e |> HS.toList)
+        (\e -> HS.singleton P.hash1 e |> HS.toList)
     `C.is`
         (\e -> [e])
     `C.for`
-        I.bool
+        TU.personInvestigator
 
 claimElementInListAfterInsert : C.Claim
 claimElementInListAfterInsert =
@@ -323,7 +326,7 @@ claimElementInListAfterInsert =
     `C.true`
         (\(hset, e) -> HS.insert e hset |> HS.toList |> L.any ((==) e))
     `C.for`
-        I.tuple (testHashSetInvestigator, I.bool)
+        I.tuple (testHashSetInvestigator, TU.personInvestigator)
 
 claimElementNotInListAfterRemove : C.Claim
 claimElementNotInListAfterRemove =
@@ -332,18 +335,18 @@ claimElementNotInListAfterRemove =
     `C.false`
         (\(hset, e) -> HS.insert e hset |> HS.remove e |> HS.toList |> L.any ((==) e))
     `C.for`
-        I.tuple (testHashSetInvestigator, I.bool)
+        I.tuple (testHashSetInvestigator, TU.personInvestigator)
 
 claimFromListToListIsSortedList : C.Claim
 claimFromListToListIsSortedList =
     C.claim
-        "fromList composed with toList produces a sorted unique list"
+        "fromList composed with toList produces a unique list"
     `C.that`
-        (\list -> HS.fromList U.hashBool list |> HS.toList)
+        (\list -> HS.fromList P.hash1 list |> HS.toList |> L.sortWith P.order)
     `C.is`
-        (\list -> U.unique list |> L.sortBy U.hashBool)
+        (\list -> LS.setize list |> L.sortWith P.order)
     `C.for`
-        I.list I.bool
+        I.list TU.personInvestigator
 
 claimToListLengthIsSize : C.Claim
 claimToListLengthIsSize =
@@ -353,7 +356,7 @@ claimToListLengthIsSize =
         (\hset -> HS.toList hset |> L.length)
     `C.is`
         (\hset -> HS.size hset)
-     `C.for`
+    `C.for`
         testHashSetInvestigator
 
 -- ==== transform ====
@@ -377,22 +380,22 @@ transformSuite =
 claimMapToListIsToListMap : C.Claim
 claimMapToListIsToListMap =
     C.claim
-        "map toList is toList map sorted"
+        "map toList is toList map (disregarding order)"
     `C.that`
-        (\hset -> HS.map not hset.hasher hset |> HS.toList)
+        (\hset -> HS.map P.different hset.hasher hset |> HS.toList |> L.sortWith P.order)
     `C.is`
-        (\hset -> HS.toList hset |> L.map not |> L.sortBy U.hashBool)
+        (\hset -> HS.toList hset |> L.map P.different |> L.sortWith P.order)
     `C.for`
         testHashSetInvestigator
 
 claimMapPrimeToListIsToListMap : C.Claim
 claimMapPrimeToListIsToListMap =
     C.claim
-        "map' toList is toList map sorted"
+        "map' toList is toList map (disregarding order)"
     `C.that`
-        (\hset -> HS.map' not hset |> HS.toList)
+        (\hset -> HS.map' P.different hset |> HS.toList |> L.sortWith P.order)
     `C.is`
-        (\hset -> HS.toList hset |> L.map not |> L.sortBy U.hashBool)
+        (\hset -> HS.toList hset |> L.map P.different |> L.sortWith P.order)
     `C.for`
         testHashSetInvestigator
 
@@ -401,18 +404,18 @@ claimMapPrimeHasher =
     C.claim
         ("map' hasher comes from the HashSet")
     `C.that`
-        (\(hset, e) -> HS.map' not hset |> (\hset2 -> hset2.hasher e))
+        (\(hset, e) -> HS.map' P.different hset |> (\hset2 -> hset2.hasher e))
     `C.is`
         (\(hset, e) -> hset.hasher e)
     `C.for`
-        I.tuple (testHashSetInvestigator, I.bool)
+        I.tuple (testHashSetInvestigator, TU.personInvestigator)
 
 claimFoldlIsToListMapReverse : C.Claim
 claimFoldlIsToListMapReverse =
     C.claim
         "building a list with foldl is toList mapped and reversed"
     `C.that`
-        (\hset -> HS.foldl U.prependString [] hset)
+        (\hset -> HS.foldl TU.prependString [] hset)
     `C.is`
         (\hset -> HS.toList hset |> L.map toString |> L.reverse)
     `C.for`
@@ -423,7 +426,7 @@ claimFoldrIsToListMap =
     C.claim
         "building a list with foldr is toList mapped"
     `C.that`
-        (\hset -> HS.foldr U.prependString [] hset)
+        (\hset -> HS.foldr TU.prependString [] hset)
     `C.is`
         (\hset -> HS.toList hset |> L.map toString)
     `C.for`
@@ -452,11 +455,11 @@ claimFilterTrueLeavesUnchanged =
 claimFilterToListIsToListFilter : C.Claim
 claimFilterToListIsToListFilter =
     C.claim
-        "filter the toList is the same as toList then filter"
+    "filter then toList is the same as toList then filter"
     `C.that`
-        (\hset -> HS.filter identity hset |> HS.toList)
+        (\hset -> HS.filter P.evenId hset |> HS.toList)
     `C.is`
-        (\hset -> HS.toList hset |> L.filter identity)
+        (\hset -> HS.toList hset |> L.filter P.evenId)
     `C.for`
         testHashSetInvestigator
 
@@ -466,11 +469,15 @@ claimPartitionUnionLeavesUnchanged =
         "partition then union leaves the HashSet unchanged"
     `C.that`
         (\hset ->
-            let part = HS.partition identity hset
-            in HS.union (fst part) (snd part) |> HS.toList
+            let (left, right) =
+                HS.partition P.evenId hset
+            in
+                HS.union left right
+                |> HS.toList
+                |> L.sortWith P.order
         )
     `C.is`
-        (HS.toList)
+        (HS.toList >> L.sortWith P.order)
     `C.for`
         testHashSetInvestigator
 
@@ -480,8 +487,9 @@ claimPartitionIntersectionIsEmpty =
         "partition then intersection is empty"
     `C.true`
         (\hset ->
-            let part = HS.partition identity hset
-            in HS.intersect (fst part) (snd part) |> HS.isEmpty
+            let (left, right) =
+                HS.partition P.evenId hset
+            in HS.intersect left right |> HS.isEmpty
         )
     `C.for`
         testHashSetInvestigator
@@ -492,31 +500,32 @@ claimPartitionTrueLeftFalseRight =
         "partition condition is true for all left, false for all right"
     `C.true`
         (\hset ->
-            let part = HS.partition identity hset
+            let (left, right) =
+                HS.partition P.evenId hset
             in
-                ((fst part) |> HS.toList |> L.all identity)
+                (left |> HS.toList |> L.all P.evenId)
                 &&
-                ((snd part) |> HS.toList |> L.all not)
+                (right |> HS.toList |> L.all P.oddId)
         )
     `C.for`
         testHashSetInvestigator
 
 -- ==== helpers ====
 
-testHashSetInvestigator : I.Investigator (HS.HashSet Bool Int)
+testHashSetInvestigator : I.Investigator (HS.HashSet P.Person Int)
 testHashSetInvestigator =
-    makeTestHashSetInvestigator U.hashBool
+    makeTestHashSetInvestigator P.hash1
 
-altTestHashSetInvestigator : I.Investigator (HS.HashSet Bool Int)
+altTestHashSetInvestigator : I.Investigator (HS.HashSet P.Person Int)
 altTestHashSetInvestigator =
-    makeTestHashSetInvestigator U.altHashBool
+    makeTestHashSetInvestigator P.hash2
 
-makeTestHashSetInvestigator : H.Hasher Bool comparable -> I.Investigator (HS.HashSet Bool comparable)
+makeTestHashSetInvestigator : H.Hasher P.Person comparable -> I.Investigator (HS.HashSet P.Person comparable)
 makeTestHashSetInvestigator hasher =
     let generator =
-            hashSetGenerator hasher RB.bool
+            hashSetGenerator hasher TU.personGenerator
         shrinker =
-            hashSetShrinker S.bool
+            hashSetShrinker TU.personShrinker
     in I.investigator generator shrinker
 
 hashSetGenerator : H.Hasher e comparable -> R.Generator e -> R.Generator (HS.HashSet e comparable)
@@ -541,7 +550,7 @@ hashSetShrinker elemShrinker hset =
         (HS.foldl shrinkElem [] hset)
         |> LL.fromList
 
-claimHasherFromFirst : String -> (HS.HashSet Bool Int -> HS.HashSet Bool Int -> HS.HashSet Bool Int) -> C.Claim
+claimHasherFromFirst : String -> (HS.HashSet P.Person Int -> HS.HashSet P.Person Int -> HS.HashSet P.Person Int) -> C.Claim
 claimHasherFromFirst name combiner =
     C.claim
         (name ++ " hasher comes from the first HashSet")
@@ -550,4 +559,4 @@ claimHasherFromFirst name combiner =
     `C.is`
         (\(hset1, hset2, e) -> hset1.hasher e)
     `C.for`
-        I.tuple3 (testHashSetInvestigator, altTestHashSetInvestigator, I.bool)
+        I.tuple3 (testHashSetInvestigator, altTestHashSetInvestigator, TU.personInvestigator)

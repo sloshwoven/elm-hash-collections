@@ -114,20 +114,33 @@ Example:
 -}
 update : k -> (Maybe v -> Maybe v) -> HashDict k comparable v -> HashDict k comparable v
 update k up hdict =
-    let up' mkvs =
-        case mkvs of
-            Nothing ->
-                up Nothing
-                |> M.map (\v -> [(k, v)])
-            Just kvs ->
-                L.filterMap (\(k', v) ->
-                    if (k' == k)
-                    then
-                        up (Just v)
-                        |> M.map (\v' -> (k', v'))
-                    else Just (k', v)
-                ) kvs
-                |> U.listToMaybe
+    let
+        sing v =
+            [(k, v)]
+        up' mkvs =
+            case mkvs of
+                Nothing ->
+                    up Nothing
+                    |> M.map sing
+                Just kvs ->
+                    let up'' kvs' =
+                        case kvs' of
+                            [] ->
+                                up Nothing
+                                |> M.map sing
+                                |> M.withDefault []
+                            (k', v') :: rest ->
+                                if (k' == k)
+                                then
+                                    up (Just v')
+                                    |> M.map sing
+                                    |> M.withDefault []
+                                    |> U.prepend rest
+                                else
+                                    (k', v') :: up'' rest
+                    in
+                        up'' kvs
+                        |> U.listToMaybe
     in
         { hdict |
             hashToKV = D.update (hdict.hasher k) up' hdict.hashToKV
@@ -183,7 +196,7 @@ get k hdict =
         |> L.filter (U.fstEq k)
     in case match of
         [] -> Nothing
-        (k', v) :: _ -> Just v
+        (_, v) :: _ -> Just v
 
 {-| Get the size of a `HashDict` - the number of key/value pairs.
 
@@ -215,9 +228,9 @@ Example:
 -}
 union : HashDict k comparable v -> HashDict k comparable v -> HashDict k comparable v
 union hdict1 hdict2 =
-    { hdict1 |
-        hashToKV = D.union hdict1.hashToKV hdict2.hashToKV
-    }
+    let up k v un =
+        insert k v un
+    in foldl up hdict1 hdict2
 
 {-| Create a `HashDict` as the intersection of two other `HashDict`s. The new
 `HashDict` will use the hasher from the first `HashDict`.
@@ -238,9 +251,9 @@ Example:
 -}
 intersect : HashDict k comparable v -> HashDict k comparable v -> HashDict k comparable v
 intersect hdict1 hdict2 =
-    { hdict1 |
-        hashToKV = D.intersect hdict1.hashToKV hdict2.hashToKV
-    }
+    let hdict2Member k v =
+        member k hdict2
+    in filter hdict2Member hdict1
 
 {-| Create a `HashDict` as the difference of two other `HashDict`s. The new
 `HashDict` will use the hasher from the first `HashDict`.
@@ -261,9 +274,9 @@ Example:
 -}
 diff : HashDict k comparable v -> HashDict k comparable v -> HashDict k comparable v
 diff hdict1 hdict2 =
-    { hdict1 |
-        hashToKV = D.diff hdict1.hashToKV hdict2.hashToKV
-    }
+    let up k v df =
+        remove k df
+    in foldl up hdict1 hdict2
 
 -- lists
 

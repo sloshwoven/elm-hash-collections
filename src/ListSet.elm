@@ -25,14 +25,11 @@ union lset1 lset2 =
 
 intersect : List e -> List e -> List e
 intersect lset1 lset2 =
-    L.filter (memberOf lset2) lset1
+    L.filter (U.memberOf lset2) lset1
 
 diff : List e -> List e -> List e
 diff lset1 lset2 =
-    L.filter (U.notF <| memberOf lset2) lset1
-
-memberOf : List e -> e -> Bool
-memberOf = flip L.member
+    L.filter (U.notF <| U.memberOf lset2) lset1
 
 setize : List e -> List e
 setize list =

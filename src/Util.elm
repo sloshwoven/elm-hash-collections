@@ -1,5 +1,7 @@
 module Util
     ( notF
+    , prepend
+    , memberOf
     , listToMaybe
     , maybeToBool
     , dictValMapSum
@@ -10,10 +12,17 @@ module Util
     ) where
 
 import Dict as D
+import List as L
 
 notF : (a -> Bool) -> a -> Bool
 notF f x =
     not <| f x
+
+prepend : List a -> List a -> List a
+prepend = flip L.append
+
+memberOf : List e -> e -> Bool
+memberOf = flip L.member
 
 listToMaybe : List a -> Maybe (List a)
 listToMaybe list =
