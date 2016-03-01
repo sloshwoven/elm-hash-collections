@@ -2,6 +2,7 @@ module Util
     ( notF
     , prepend
     , memberOf
+    , filterFirst
     , listToMaybe
     , maybeToBool
     , dictValMapSum
@@ -23,6 +24,16 @@ prepend = flip L.append
 
 memberOf : List e -> e -> Bool
 memberOf = flip L.member
+
+filterFirst : (a -> Bool) -> List a -> Maybe a
+filterFirst f list =
+    case list of
+        [] ->
+            Nothing
+        x :: rest ->
+            if f x
+            then Just x
+            else filterFirst f rest
 
 listToMaybe : List a -> Maybe (List a)
 listToMaybe list =

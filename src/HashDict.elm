@@ -178,7 +178,9 @@ Usage: `member k hdict`
 -}
 member : k -> HashDict k comparable v -> Bool
 member k hdict =
-    get k hdict |> U.maybeToBool
+    case D.get (hdict.hasher k) hdict.hashToKV of
+        Nothing -> False
+        Just els -> L.any (U.fstEq k) els
 
 {-| Retrieve a value from a `HashDict`, or `Nothing` if the key is not a
 member.
@@ -190,13 +192,10 @@ Usage: `get k hdict`
 -}
 get : k -> HashDict k comparable v -> Maybe v
 get k hdict =
-    let match =
-        D.get (hdict.hasher k) hdict.hashToKV
-        |> M.withDefault []
-        |> L.filter (U.fstEq k)
-    in case match of
-        [] -> Nothing
-        (_, v) :: _ -> Just v
+    D.get (hdict.hasher k) hdict.hashToKV
+    |> M.withDefault []
+    |> U.filterFirst (U.fstEq k)
+    |> M.map snd
 
 {-| Get the size of a `HashDict` - the number of key/value pairs.
 
