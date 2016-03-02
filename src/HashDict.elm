@@ -300,7 +300,7 @@ values = mapKVs snd
 mapKVs : ((k, v) -> r) -> HashDict k comparable v -> List r
 mapKVs f hdict =
     D.values hdict.hashToKV
-    |> L.concatMap (LS.map f)
+    |> L.concatMap (L.map f)
 
 {-| Convert a `HashDict` to a `List` of key/value pairs.
 
